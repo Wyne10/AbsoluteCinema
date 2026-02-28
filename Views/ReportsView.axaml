@@ -1,0 +1,160 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="600"
+             x:Class="AbsoluteCinema.Views.ReportsView">
+
+    <Grid Margin="24">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="16"/>
+            <ColumnDefinition Width="3*"/>
+        </Grid.ColumnDefinitions>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackPanel Grid.Column="0" Grid.ColumnSpan="3" Margin="0,0,0,24">
+            <TextBlock Text="Отчёты"
+                       FontSize="28"
+                       FontWeight="SemiBold"/>
+            <TextBlock Text="Генерация еженедельных, ежемесячных и ежеквартальных отчётов"
+                       Opacity="0.7"
+                       Margin="0,4,0,0"/>
+        </StackPanel>
+
+        <!-- Left panel -->
+        <Grid Grid.Row="1" Grid.Column="0" RowDefinitions="Auto,Auto,*">
+
+            <!-- Параметры отчёта -->
+            <Border Grid.Row="0"
+                    Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
+                    CornerRadius="8"
+                    Padding="20">
+                <StackPanel Spacing="16">
+                    <TextBlock Text="Параметры отчёта"
+                               FontSize="16"
+                               FontWeight="SemiBold"/>
+
+                    <!-- Тип -->
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="Тип отчёта" Opacity="0.7" FontSize="12"/>
+                        <ComboBox PlaceholderText="Выберите тип" HorizontalAlignment="Stretch">
+                            <ComboBoxItem Content="Еженедельный"/>
+                            <ComboBoxItem Content="Ежемесячный"/>
+                            <ComboBoxItem Content="Ежеквартальный"/>
+                        </ComboBox>
+                    </StackPanel>
+
+                    <!-- Дата -->
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="Период" Opacity="0.7" FontSize="12"/>
+                        <StackPanel Orientation="Horizontal"
+                                    HorizontalAlignment="Center"
+                                    Spacing="24">
+                            <Viewbox MaxHeight="180" MaxWidth="200">
+                                <Calendar x:Name="PeriodCalendar"
+                                          SelectionMode="SingleRange"/>
+                            </Viewbox>
+                            <StackPanel VerticalAlignment="Center" Spacing="8">
+                                <TextBlock Text="Выбранный период:"
+                                           FontWeight="SemiBold"
+                                           FontSize="12"/>
+                                <StackPanel Spacing="4">
+                                    <TextBlock x:Name="StartDateText"
+                                               Text="Начало: —"
+                                               FontSize="12"
+                                               Opacity="0.8"/>
+                                    <TextBlock x:Name="EndDateText"
+                                               Text="Конец: —"
+                                               FontSize="12"
+                                               Opacity="0.8"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- Кнопка Сгенерировать -->
+            <Button Grid.Row="1"
+                    Content="Сгенерировать отчёт"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
+                    Margin="0,16,0,16"
+                    Padding="16,12"
+                    Theme="{DynamicResource SolidButton}"/>
+
+            <!-- Скачанные файлы -->
+            <Border Grid.Row="2"
+                    Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
+                    CornerRadius="8"
+                    Padding="20">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top"
+                               Text="Скачанные файлы"
+                               FontSize="16"
+                               FontWeight="SemiBold"
+                               Margin="0,0,0,12"/>
+
+                    <ListBox x:Name="FilesListBox"
+                             SelectionMode="Single">
+                        <ListBoxItem>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <PathIcon Data="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"
+                                          Width="16" Height="16"/>
+                                <TextBlock Text="Отчёт_Январь_2026.pdf"/>
+                            </StackPanel>
+                        </ListBoxItem>
+                        <ListBoxItem>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <PathIcon Data="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"
+                                          Width="16" Height="16"/>
+                                <TextBlock Text="Отчёт_Декабрь_2025.xlsx"/>
+                            </StackPanel>
+                        </ListBoxItem>
+                        <ListBoxItem>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <PathIcon Data="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"
+                                          Width="16" Height="16"/>
+                                <TextBlock Text="Квартальный_Q4_2025.docx"/>
+                            </StackPanel>
+                        </ListBoxItem>
+                    </ListBox>
+                </DockPanel>
+            </Border>
+        </Grid>
+        
+        <GridSplitter Grid.Row="1" Grid.Column="1" ResizeDirection="Columns"/>
+
+        <!-- Preview panel -->
+        <Border Grid.Row="1" Grid.Column="2"
+                Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
+                CornerRadius="8"
+                Padding="20">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Top"
+                           Text="Предпросмотр"
+                           FontSize="16"
+                           FontWeight="SemiBold"
+                           Margin="0,0,0,12"/>
+
+                <!-- Placeholder when no file selected -->
+                <StackPanel VerticalAlignment="Center"
+                            HorizontalAlignment="Center"
+                            Spacing="12">
+                    <PathIcon Data="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11zM9 13h6v2H9v-2zm0 4h6v2H9v-2zm0-8h4v2H9V9z"
+                              Width="48" Height="48"
+                              Opacity="0.5"/>
+                    <TextBlock Text="Выберите файл для предпросмотра"
+                               Opacity="0.5"
+                               HorizontalAlignment="Center"/>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+    </Grid>
+</UserControl>
