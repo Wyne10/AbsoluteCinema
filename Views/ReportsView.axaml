@@ -1,21 +1,15 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:AbsoluteCinema.ViewModels"
+             xmlns:models="using:AbsoluteCinema.Models"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:avaloniaPdfViewer="clr-namespace:AvaloniaPdfViewer;assembly=AvaloniaPdfViewer"
              mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="600"
-             x:Class="AbsoluteCinema.Views.ReportsView">
+             x:Class="AbsoluteCinema.Views.ReportsView"
+             x:DataType="vm:ReportsViewModel">
 
-    <Grid Margin="24">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="16"/>
-            <ColumnDefinition Width="3*"/>
-        </Grid.ColumnDefinitions>
-
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+    <Grid Margin="24" ColumnDefinitions="*,16,3*" RowDefinitions="Auto,*">
 
         <!-- Header -->
         <StackPanel Grid.Column="0" Grid.ColumnSpan="3" Margin="0,0,0,24">
@@ -43,11 +37,11 @@
                     <!-- Тип -->
                     <StackPanel Spacing="6">
                         <TextBlock Text="Тип отчёта" Opacity="0.7" FontSize="12"/>
-                        <ComboBox PlaceholderText="Выберите тип" HorizontalAlignment="Stretch">
-                            <ComboBoxItem Content="Еженедельный"/>
-                            <ComboBoxItem Content="Ежемесячный"/>
-                            <ComboBoxItem Content="Ежеквартальный"/>
-                        </ComboBox>
+                        <ComboBox Name="ReportType" 
+                                  PlaceholderText="Выберите тип" 
+                                  HorizontalAlignment="Stretch" 
+                                  ItemsSource="{Binding ReportTypes}" 
+                                  SelectedItem="{Binding SelectedReportType}"/>
                     </StackPanel>
 
                     <!-- Дата -->
@@ -57,7 +51,7 @@
                                     HorizontalAlignment="Center"
                                     Spacing="24">
                             <Viewbox MaxHeight="180" MaxWidth="200">
-                                <Calendar x:Name="PeriodCalendar"
+                                <Calendar Name="PeriodCalendar"
                                           SelectionMode="SingleRange"/>
                             </Viewbox>
                             <StackPanel VerticalAlignment="Center" Spacing="8">
@@ -65,11 +59,11 @@
                                            FontWeight="SemiBold"
                                            FontSize="12"/>
                                 <StackPanel Spacing="4">
-                                    <TextBlock x:Name="StartDateText"
+                                    <TextBlock Name="StartDateText"
                                                Text="Начало: —"
                                                FontSize="12"
                                                Opacity="0.8"/>
-                                    <TextBlock x:Name="EndDateText"
+                                    <TextBlock Name="EndDateText"
                                                Text="Конец: —"
                                                FontSize="12"
                                                Opacity="0.8"/>
@@ -82,6 +76,7 @@
 
             <!-- Кнопка Сгенерировать -->
             <Button Grid.Row="1"
+                    Command="{Binding GenerateReportCommand}"
                     Content="Сгенерировать отчёт"
                     HorizontalAlignment="Stretch"
                     HorizontalContentAlignment="Center"
@@ -101,29 +96,19 @@
                                FontWeight="SemiBold"
                                Margin="0,0,0,12"/>
 
-                    <ListBox x:Name="FilesListBox"
+                    <ListBox Name="FilesListBox"
+                             ItemsSource="{Binding ReportFiles}"
+                             SelectedItem="{Binding SelectedFile}"
                              SelectionMode="Single">
-                        <ListBoxItem>
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <PathIcon Data="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"
-                                          Width="16" Height="16"/>
-                                <TextBlock Text="Отчёт_Январь_2026.pdf"/>
-                            </StackPanel>
-                        </ListBoxItem>
-                        <ListBoxItem>
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <PathIcon Data="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"
-                                          Width="16" Height="16"/>
-                                <TextBlock Text="Отчёт_Декабрь_2025.xlsx"/>
-                            </StackPanel>
-                        </ListBoxItem>
-                        <ListBoxItem>
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <PathIcon Data="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"
-                                          Width="16" Height="16"/>
-                                <TextBlock Text="Квартальный_Q4_2025.docx"/>
-                            </StackPanel>
-                        </ListBoxItem>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="models:ReportFile">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <PathIcon Data="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"
+                                              Width="16" Height="16"/>
+                                    <TextBlock Text="{Binding Name}"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
                     </ListBox>
                 </DockPanel>
             </Border>
@@ -143,17 +128,52 @@
                            FontWeight="SemiBold"
                            Margin="0,0,0,12"/>
 
-                <!-- Placeholder when no file selected -->
-                <StackPanel VerticalAlignment="Center"
-                            HorizontalAlignment="Center"
-                            Spacing="12">
-                    <PathIcon Data="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11zM9 13h6v2H9v-2zm0 4h6v2H9v-2zm0-8h4v2H9V9z"
-                              Width="48" Height="48"
-                              Opacity="0.5"/>
-                    <TextBlock Text="Выберите файл для предпросмотра"
-                               Opacity="0.5"
-                               HorizontalAlignment="Center"/>
-                </StackPanel>
+                <Grid>
+                    <!-- Placeholder when no file selected -->
+                    <StackPanel VerticalAlignment="Center"
+                                HorizontalAlignment="Center"
+                                Spacing="12"
+                                IsVisible="{Binding CurrentPreview, 
+                                Converter={x:Static ObjectConverters.Equal}, 
+                                ConverterParameter={x:Static vm:PreviewType.None}}">
+                        <PathIcon Data="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11zM9 13h6v2H9v-2zm0 4h6v2H9v-2zm0-8h4v2H9V9z"
+                                  Width="48" Height="48"
+                                  Opacity="0.5"/>
+                        <TextBlock Text="Выберите файл для предпросмотра"
+                                   Opacity="0.5"
+                                   HorizontalAlignment="Center"/>
+                    </StackPanel>
+
+                    <!-- PDF Preview -->
+                    <avaloniaPdfViewer:PdfViewer
+                        Source="{Binding PreviewFilePath}"
+                        IsVisible="{Binding CurrentPreview, 
+                        Converter={x:Static ObjectConverters.Equal}, 
+                        ConverterParameter={x:Static vm:PreviewType.Pdf}}"/>
+
+                    <!-- Excel Preview (DataGrid) -->
+                    <DataGrid IsVisible="{Binding CurrentPreview, 
+                              Converter={x:Static ObjectConverters.Equal}, 
+                              ConverterParameter={x:Static vm:PreviewType.Excel}}"
+                              IsReadOnly="True"
+                              AutoGenerateColumns="True"
+                              GridLinesVisibility="All"/>
+
+                    <!-- Unsupported -->
+                    <StackPanel IsVisible="{Binding CurrentPreview, 
+                                Converter={x:Static ObjectConverters.Equal}, 
+                                ConverterParameter={x:Static vm:PreviewType.Unsupported}}"
+                                VerticalAlignment="Center"
+                                HorizontalAlignment="Center"
+                                Spacing="12">
+                        <PathIcon Data="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"
+                                  Width="48" Height="48"
+                                  Opacity="0.5"/>
+                        <TextBlock Text="Предпросмотр не поддерживается"
+                                   Opacity="0.7"
+                                   HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Grid>
             </DockPanel>
         </Border>
     </Grid>

@@ -23,6 +23,7 @@ sealed class Program
         builder.AddServices();
 
         var host = builder.Build();
+        App.Host = host;   
 
         await host.StartAsync();
 

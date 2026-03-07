@@ -1,16 +1,19 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Data.Core;
 using Avalonia.Data.Core.Plugins;
 using System.Linq;
 using Avalonia.Markup.Xaml;
 using AbsoluteCinema.ViewModels;
 using AbsoluteCinema.Views;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace AbsoluteCinema;
 
 public partial class App : Application
 {
+    public static IHost Host { get; set; } = null!;
+    
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
@@ -25,7 +28,7 @@ public partial class App : Application
             DisableAvaloniaDataAnnotationValidation();
             desktop.MainWindow = new MainWindow
             {
-                DataContext = new MainWindowViewModel(),
+                DataContext = Host.Services.GetRequiredService<MainWindowViewModel>(),
             };
         }
 

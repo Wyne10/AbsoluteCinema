@@ -16,14 +16,9 @@
         <vm:MainWindowViewModel/>
     </Design.DataContext>
     
-    <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
-
+    <Grid ColumnDefinitions="Auto,*">
         <views:NavigationMenuView Grid.Column="0"/>
-        <views:ReportsView Grid.Column="1"/>
+        <views:ReportsView Grid.Column="1" DataContext="{Binding ReportsViewModel}"/>
     </Grid>
 
 

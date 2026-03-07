@@ -1,6 +1,6 @@
 ﻿namespace AbsoluteCinema.ViewModels;
 
-public partial class MainWindowViewModel : ViewModelBase
+public partial class MainWindowViewModel(ReportsViewModel reportsViewModel) : ViewModelBase
 {
-    public string Greeting { get; } = "Welcome to Avalonia!";
+    public ReportsViewModel ReportsViewModel { get; } = reportsViewModel;
 }

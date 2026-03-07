@@ -1,3 +1,6 @@
+using AbsoluteCinema.Services.Report;
+using AbsoluteCinema.Services.Report.Weekly;
+using AbsoluteCinema.ViewModels;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -31,7 +34,13 @@ public static class Hosting
         
         public IServiceCollection AddServices()
         {
-            return builder.Services;
+            return builder.Services
+                .AddTransient<WeeklyCardReportService>()
+                .AddTransient<WeeklyCashierReportService>()
+                .AddTransient<WeeklyRentalsReportService>()
+                .AddKeyedTransient<IReportService, WeeklyReportService>("weekly")
+                .AddTransient<MainWindowViewModel>()
+                .AddTransient<ReportsViewModel>();
         }
     }
 }

@@ -1,4 +1,5 @@
 using System.Linq;
+using AbsoluteCinema.ViewModels;
 using Avalonia.Controls;
 
 namespace AbsoluteCinema.Views;
@@ -9,6 +10,11 @@ public partial class ReportsView : UserControl
     {
         InitializeComponent();
         PeriodCalendar.SelectedDatesChanged += (_, _) => UpdatePeriodText();
+        PeriodCalendar.SelectedDatesChanged += (_, _) =>
+        {
+            if (DataContext is ReportsViewModel vm)
+                vm.OnSelectedDatesChanged(PeriodCalendar.SelectedDates);
+        };
     }
 
     private void UpdatePeriodText()
