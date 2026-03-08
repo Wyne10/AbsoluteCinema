@@ -10,7 +10,7 @@ using System.Web;
 using AbsoluteCinema.Models;
 using Microsoft.Extensions.Logging;
 
-namespace AbsoluteCinema.Services.Report;
+namespace AbsoluteCinema.Services.Reports;
 
 public partial class ReportProvider : IDisposable
 {
@@ -57,7 +57,7 @@ public partial class ReportProvider : IDisposable
 
     private async Task<byte[]> DownloadReportAsync(string reportPath, ReportFormat format, DateTime? startDate = null, DateTime? endDate = null, Dictionary<string, string>? fields = null)
     {
-        _logger.LogDebug("Starting download at {ReportPath}", reportPath);
+        _logger.LogInformation("Starting download at {ReportPath}", reportPath);
         if (!_isAuthenticated)
         {
            _logger.LogDebug("Not authenticated, trying to login..."); 
@@ -147,7 +147,7 @@ public partial class ReportProvider : IDisposable
         if (contentType.Contains("text/html") && content.Length < 10000)
             throw new Exception("Export failed - got HTML response");
 
-        _logger.LogDebug("Download successful");
+        _logger.LogInformation("Download successful");
         return content;
     }
 

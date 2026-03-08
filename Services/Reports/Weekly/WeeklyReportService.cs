@@ -1,4 +1,4 @@
-namespace AbsoluteCinema.Services.Report.Weekly;
+namespace AbsoluteCinema.Services.Reports.Weekly;
 
 public sealed class WeeklyReportService(
     WeeklyCardReportService card,

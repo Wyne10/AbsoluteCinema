@@ -1,5 +1,8 @@
-using AbsoluteCinema.Services.Report;
-using AbsoluteCinema.Services.Report.Weekly;
+using AbsoluteCinema.Configuration;
+using AbsoluteCinema.Services.Movies;
+using AbsoluteCinema.Services.Reports;
+using AbsoluteCinema.Services.Reports.Monthly;
+using AbsoluteCinema.Services.Reports.Weekly;
 using AbsoluteCinema.ViewModels;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,12 +16,19 @@ public static class Hosting
 {
     extension(HostApplicationBuilder builder)
     {
-        public IConfigurationBuilder ConfigureServices(string[] args)
+        public IConfigurationBuilder SetupConfiguration(string[] args)
         {
             return builder.Configuration
                 .AddCommandLine(args)
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                 .AddJsonFile($"appsettings.{builder.Environment.ContentRootPath}.json", optional: true, reloadOnChange: true);
+        }
+
+        public IServiceCollection ConfigureServices()
+        {
+            return builder.Services
+                .Configure<MovieProviderConfiguration>(builder.Configuration.GetSection("Movie"))
+                .Configure<ReportConfiguration>("MonthlyReport", builder.Configuration.GetSection("Report:Monthly"));
         }
         
         public ILoggingBuilder ConfigureLogger()
@@ -35,12 +45,19 @@ public static class Hosting
         public IServiceCollection AddServices()
         {
             return builder.Services
+                // Reports
                 .AddTransient<WeeklyCardReportService>()
                 .AddTransient<WeeklyCashierReportService>()
                 .AddTransient<WeeklyRentalsReportService>()
                 .AddKeyedTransient<IReportService, WeeklyReportService>("weekly")
+                .AddTransient<MonthlyPaymentReportService>()
+                .AddTransient<MonthlyGrossReportService>()
+                .AddKeyedTransient<IReportService, MonthlyReportService>("monthly")
+                // View models
                 .AddTransient<MainWindowViewModel>()
-                .AddTransient<ReportsViewModel>();
+                .AddTransient<ReportsViewModel>()
+                // Singletons
+                .AddSingleton<IMovieProvider, MovieProvider>();
         }
     }
 }

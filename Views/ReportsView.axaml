@@ -146,9 +146,9 @@
 
                     <!-- PDF Preview -->
                     <avaloniaPdfViewer:PdfViewer
-                        Source="{Binding PreviewFilePath}"
-                        IsVisible="{Binding CurrentPreview, 
-                        Converter={x:Static ObjectConverters.Equal}, 
+                        Source="{Binding PdfPreviewPath}"
+                        IsVisible="{Binding CurrentPreview,
+                        Converter={x:Static ObjectConverters.Equal},
                         ConverterParameter={x:Static vm:PreviewType.Pdf}}"/>
 
                     <!-- Excel Preview (DataGrid) -->
@@ -157,7 +157,7 @@
                               Converter={x:Static ObjectConverters.Equal},
                               ConverterParameter={x:Static vm:PreviewType.Excel}}"
                               IsReadOnly="True"
-                              AutoGenerateColumns="True"
+                              AutoGenerateColumns="False"
                               GridLinesVisibility="All"/>
 
                     <!-- Unsupported -->

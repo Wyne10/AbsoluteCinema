@@ -6,7 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using AbsoluteCinema.Models;
-using AbsoluteCinema.Services.Report;
+using AbsoluteCinema.Services.Reports;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
@@ -16,6 +16,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
+using ReportProvider = AbsoluteCinema.Services.Reports.ReportProvider;
 
 namespace AbsoluteCinema.ViewModels;
 
@@ -38,8 +39,11 @@ public partial class ReportsViewModel(IServiceProvider serviceProvider, ILogger<
     [ObservableProperty]
     private PreviewType _currentPreview = PreviewType.None;
 
-    [ObservableProperty] 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(PdfPreviewPath))]
     private string? _previewFilePath;
+
+    public string? PdfPreviewPath => CurrentPreview == PreviewType.Pdf ? PreviewFilePath : null;
 
     private IReportService? _reportService;
 
@@ -94,13 +98,13 @@ public partial class ReportsViewModel(IServiceProvider serviceProvider, ILogger<
             CurrentPreview = PreviewType.None;
             return;
         }
-        PreviewFilePath = value.Path;
         CurrentPreview = value.Extension switch
         {
             ".pdf" => PreviewType.Pdf,
             ".xlsx" or ".xls" => PreviewType.Excel,
             _ => PreviewType.Unsupported
         };
+        PreviewFilePath = value.Path;
     }
 
     public void OpenReport(Visual visual)
@@ -123,7 +127,7 @@ public partial class ReportsViewModel(IServiceProvider serviceProvider, ILogger<
         {
             logger.LogError(ex, "Report generation failed");
             var box = MessageBoxManager
-                .GetMessageBoxStandard("Ошибка", $"При генерации отчета произошла ошибка {ex.Message}", ButtonEnum.Ok,
+                .GetMessageBoxStandard("Ошибка", $"При генерации отчета произошла ошибка: {ex.Message}", ButtonEnum.Ok,
                     Icon.Error);
             await box.ShowAsync();
         }

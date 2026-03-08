@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace AbsoluteCinema.Services.Report;
+namespace AbsoluteCinema.Services.Reports;
 
 public class CompositeReportService : ReportService
 {

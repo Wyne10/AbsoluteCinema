@@ -39,11 +39,10 @@ public partial class ReportsView : UserControl
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (sender is not ReportsViewModel vm) return;
-        if (e.PropertyName is not (nameof(ReportsViewModel.PreviewFilePath) or
-            nameof(ReportsViewModel.CurrentPreview))) return;
+        if (e.PropertyName is not nameof(ReportsViewModel.PreviewFilePath)) return;
         
         if (vm is { CurrentPreview: PreviewType.Excel, PreviewFilePath: not null })
-            _excelRenderer?.Render(vm.PreviewFilePath);
+            _excelRenderer?.RenderAsync(vm.PreviewFilePath);
         else
             _excelRenderer?.Clear();
     }

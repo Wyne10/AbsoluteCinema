@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using AbsoluteCinema.Models;
 using Microsoft.Extensions.Logging;
 
-namespace AbsoluteCinema.Services.Report.Weekly;
+namespace AbsoluteCinema.Services.Reports.Weekly;
 
 public class WeeklyCardReportService(ILogger<ReportService> logger) : ReportService
 {
@@ -16,7 +16,7 @@ public class WeeklyCardReportService(ILogger<ReportService> logger) : ReportServ
 
         var newFileName = $"По пушкинской {from:dd.MM.yy} - {to:dd.MM.yy}.pdf";
         var newFilePath = Path.Combine(sessionPath, newFileName);
-        logger.LogDebug("Downloading {FileName}", newFileName);
+        logger.LogInformation("Downloading {FileName}", newFileName);
         await reportProvider.DownloadReportToFileAsync(ReportPath, newFilePath, ReportFormat.PDF, from, to);
         
         ProgressDownload();

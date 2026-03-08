@@ -18,7 +18,8 @@ sealed class Program
     public static async Task Main(string[] args) {
         var builder = Host.CreateApplicationBuilder(args);
 
-        builder.ConfigureServices(args);
+        builder.SetupConfiguration(args);
+        builder.ConfigureServices();
         builder.ConfigureLogger();
         builder.AddServices();
 
