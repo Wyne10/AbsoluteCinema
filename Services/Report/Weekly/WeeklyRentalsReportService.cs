@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using AbsoluteCinema.Models;
+using Microsoft.Extensions.Logging;
 
 namespace AbsoluteCinema.Services.Report.Weekly;
 
-public class WeeklyRentalsReportService : ReportService
+public class WeeklyRentalsReportService(ILogger<ReportService> logger) : ReportService
 {
     private const string ReportPath = "CashReports/CashTotalToday";
     private const string ShowRentalsSelector = "ReportViewer1$ctl04$ctl07$ddValue";
@@ -19,6 +20,7 @@ public class WeeklyRentalsReportService : ReportService
         {
             var newFileName = $"Сводный кассовый {date:dd.MM.yy}.pdf";
             var newFilePath = Path.Combine(sessionPath, newFileName);
+            logger.LogDebug("Downloading {FileName}", newFileName);
             await reportProvider.DownloadReportToFileAsync(ReportPath, newFilePath, ReportFormat.PDF, date, null,
                 new Dictionary<string, string>
                 {

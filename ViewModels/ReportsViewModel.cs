@@ -7,11 +7,15 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using AbsoluteCinema.Models;
 using AbsoluteCinema.Services.Report;
+using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Enums;
 
 namespace AbsoluteCinema.ViewModels;
 
@@ -45,7 +49,7 @@ public partial class ReportsViewModel(IServiceProvider serviceProvider, ILogger<
 
     private List<ReportFile> GetCurrentReports()
     {
-        if (_selectedDates?.Count < 2 || _reportService == null) return [];
+        if (_selectedDates == null || _selectedDates?.Count < 2 || _reportService == null) return [];
         var reportsPath = _reportService.GetSessionPath(_selectedDates.First(), _selectedDates.Last());
         if (!Directory.Exists(reportsPath)) return [];
         var filePaths = Directory.EnumerateFiles(reportsPath);
@@ -99,6 +103,12 @@ public partial class ReportsViewModel(IServiceProvider serviceProvider, ILogger<
         };
     }
 
+    public void OpenReport(Visual visual)
+    {
+        if (SelectedFile == null) return;
+        TopLevel.GetTopLevel(visual)?.Launcher.LaunchUriAsync(new Uri(SelectedFile.Path));
+    }
+
     [RelayCommand(CanExecute = nameof(CanGenerateReport))]
     private async Task GenerateReport()
     {
@@ -106,12 +116,16 @@ public partial class ReportsViewModel(IServiceProvider serviceProvider, ILogger<
         try
         {
             IsGenerating = true;
-            using var reportProvider = new ReportProvider();
+            using var reportProvider = new ReportProvider(logger);
             await _reportService!.GenerateReportFiles(_selectedDates.First(), _selectedDates.Last(), reportProvider);
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Report generation failed");
+            var box = MessageBoxManager
+                .GetMessageBoxStandard("Ошибка", $"При генерации отчета произошла ошибка {ex.Message}", ButtonEnum.Ok,
+                    Icon.Error);
+            await box.ShowAsync();
         }
         finally
         {
@@ -121,6 +135,6 @@ public partial class ReportsViewModel(IServiceProvider serviceProvider, ILogger<
 
     public bool CanGenerateReport()
     {
-        return _selectedDates?.Count >= 2 && _reportService is not null && !IsGenerating;
+        return _selectedDates != null && _selectedDates?.Count >= 2 && _reportService is not null && !IsGenerating;
     }
 }
