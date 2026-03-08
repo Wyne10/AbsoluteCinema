@@ -9,6 +9,7 @@ using AbsoluteCinema.Models;
 using AbsoluteCinema.Services.Reports;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Primitives;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
@@ -141,5 +142,25 @@ public partial class ReportsViewModel(IServiceProvider serviceProvider, ILogger<
     public bool CanGenerateReport()
     {
         return _selectedDates is { Count: >= 2 } && _reportService is not null && !IsGenerating;
+    }
+
+    [RelayCommand]
+    private void OpenReportsFolder()
+    {
+        string? pathToOpen = null;
+
+        if (_selectedDates is { Count: >= 2 } && _reportService is not null)
+        {
+            var sessionPath = _reportService.GetSessionPath(_selectedDates.First(), _selectedDates.Last());
+            pathToOpen = Directory.Exists(sessionPath) ? sessionPath : Path.GetDirectoryName(sessionPath);
+        }
+
+        pathToOpen ??= Path.Combine(Path.GetTempPath(), IReportService.ReportsRootPath);
+
+        if (!Directory.Exists(pathToOpen))
+            Directory.CreateDirectory(pathToOpen);
+
+        if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime { MainWindow: not null } desktop)
+            desktop.MainWindow.Launcher.LaunchUriAsync(new Uri(pathToOpen));
     }
 }
