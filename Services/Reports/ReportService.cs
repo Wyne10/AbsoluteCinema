@@ -15,7 +15,7 @@ public abstract class ReportService : IReportService
         return sessionPath;
     }
 
-    public abstract Task<string> GenerateReportFiles(DateTime from, DateTime to, Reports.ReportProvider reportProvider);
+    public abstract Task<string> GenerateReportFiles(DateTime from, DateTime to, ReportProvider reportProvider);
 
     protected void ProgressDownload()
     {

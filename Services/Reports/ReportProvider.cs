@@ -12,62 +12,21 @@ using Microsoft.Extensions.Logging;
 
 namespace AbsoluteCinema.Services.Reports;
 
-public partial class ReportProvider : IDisposable
+public partial class ReportProvider(ILogger logger, string baseUrl = "http://192.168.3.150") : CinemaWebAccessor(baseUrl)
 {
-    private readonly HttpClient _httpClient;
-    private readonly string _baseUrl;
-    private bool _isAuthenticated;
-
-    private readonly ILogger _logger;
-    
-    public ReportProvider(ILogger logger, string baseUrl = "http://192.168.3.150")
-    {
-        _logger = logger;
-        _baseUrl = baseUrl.TrimEnd('/');
-        var handler = new HttpClientHandler
-        {
-            CookieContainer = new CookieContainer(),
-            AllowAutoRedirect = true,
-            UseCookies = true
-        };
-        _httpClient = new HttpClient(handler) { BaseAddress = new Uri(_baseUrl) };
-    }
-
-    private async Task<bool> LoginAsync(string username = "Администратор", string password = "")
-    {
-        var loginPage = await _httpClient.GetStringAsync("/CinemaWeb/Account/Login");
-
-        var tokenMatch = ForgeryTokenRegex().Match(loginPage);
-
-        if (!tokenMatch.Success)
-            throw new Exception("Anti-forgery token not found");
-
-        var loginData = new FormUrlEncodedContent([
-            new KeyValuePair<string, string>("__RequestVerificationToken", tokenMatch.Groups[1].Value),
-            new KeyValuePair<string, string>("UserName", username),
-            new KeyValuePair<string, string>("Password", password),
-            new KeyValuePair<string, string>("RememberMe", "false")
-        ]);
-
-        var response = await _httpClient.PostAsync("/CinemaWeb/Account/Login", loginData);
-        _isAuthenticated = !response.RequestMessage?.RequestUri?.ToString().Contains("Account/Login") ?? false;
-
-        return _isAuthenticated ? true : throw new Exception("Authentication failed");
-    }
-
     private async Task<byte[]> DownloadReportAsync(string reportPath, ReportFormat format, DateTime? startDate = null, DateTime? endDate = null, Dictionary<string, string>? fields = null)
     {
-        _logger.LogInformation("Starting download at {ReportPath}", reportPath);
-        if (!_isAuthenticated)
+        logger.LogInformation("Starting download at {ReportPath}", reportPath);
+        if (!IsAuthenticated)
         {
-           _logger.LogDebug("Not authenticated, trying to login..."); 
+           logger.LogDebug("Not authenticated, trying to login..."); 
             if (await LoginAsync())
-                _logger.LogDebug("Authentication successful");
+                logger.LogDebug("Authentication successful");
         }
 
         // Initialize report in session
-        _logger.LogTrace("Initializing report session...");
-        var renderResponse = await _httpClient.GetAsync(
+        logger.LogTrace("Initializing report session...");
+        var renderResponse = await HttpClient.GetAsync(
             $"/CinemaWeb/Report/Render?path={HttpUtility.UrlEncode(reportPath)}");
 
         if (renderResponse.RequestMessage == null || renderResponse.RequestMessage.RequestUri == null)
@@ -75,14 +34,14 @@ public partial class ReportProvider : IDisposable
 
         if (renderResponse.RequestMessage.RequestUri.ToString().Contains("Account/Login"))
         {
-            _logger.LogDebug("Authentication expired, retrying...");
-            _isAuthenticated = false;
+            logger.LogDebug("Authentication expired, retrying...");
+            IsAuthenticated = false;
             return await DownloadReportAsync(reportPath, format, startDate, endDate, fields);
         }
 
         // Load report form
-        _logger.LogTrace("Extracting report form fields...");
-        var pageContent = await _httpClient.GetStringAsync("/CinemaWeb/ReportViewerWebForm.aspx");
+        logger.LogTrace("Extracting report form fields...");
+        var pageContent = await HttpClient.GetStringAsync("/CinemaWeb/ReportViewerWebForm.aspx");
 
         // Extract and modify form fields
         var formFields = ExtractFormFields(pageContent);
@@ -116,11 +75,11 @@ public partial class ReportProvider : IDisposable
         formFields["__EVENTTARGET"] = "";
         formFields["__EVENTARGUMENT"] = "";
 
-        var postResponse = await _httpClient.PostAsync(
+        var postResponse = await HttpClient.PostAsync(
             "/CinemaWeb/ReportViewerWebForm.aspx",
             new FormUrlEncodedContent(formFields));
 
-        _logger.LogTrace("Extracting session data...");
+        logger.LogTrace("Extracting session data...");
         var postContent = await postResponse.Content.ReadAsStringAsync();
 
         // Extract session and export
@@ -139,15 +98,15 @@ public partial class ReportProvider : IDisposable
                         $"&Culture=1049&CultureOverrides=True&UICulture=1049&UICultureOverrides=True" +
                         $"&ReportStack=1&ContentDisposition=OnlyHtmlInline";
 
-        _logger.LogTrace("Exporting report...");
-        var exportResponse = await _httpClient.GetAsync(exportUrl);
+        logger.LogTrace("Exporting report...");
+        var exportResponse = await HttpClient.GetAsync(exportUrl);
         var content = await exportResponse.Content.ReadAsByteArrayAsync();
 
         var contentType = exportResponse.Content.Headers.ContentType?.MediaType ?? "";
         if (contentType.Contains("text/html") && content.Length < 10000)
             throw new Exception("Export failed - got HTML response");
 
-        _logger.LogInformation("Download successful");
+        logger.LogInformation("Download successful");
         return content;
     }
 
@@ -205,15 +164,6 @@ public partial class ReportProvider : IDisposable
             Directory.CreateDirectory(directoryPath);
         await File.WriteAllBytesAsync(outputPath, content);
     }
-
-    public void Dispose()
-    {
-        _httpClient.Dispose(); 
-        GC.SuppressFinalize(this);
-    }
-
-    [GeneratedRegex(@"<input[^>]*name=""__RequestVerificationToken""[^>]*value=""([^""]+)""", RegexOptions.IgnoreCase)]
-    private static partial Regex ForgeryTokenRegex();
 
     [GeneratedRegex(@"\d{2}\.\d{2}\.\d{4}")]
     private static partial Regex DateFieldRegex();

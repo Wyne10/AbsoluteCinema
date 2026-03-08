@@ -9,13 +9,14 @@ using AbsoluteCinema.Dtos;
 using AbsoluteCinema.Models;
 using AbsoluteCinema.Services.Movies;
 using ClosedXML.Excel;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Xceed.Document.NET;
 using Xceed.Words.NET;
 
 namespace AbsoluteCinema.Services.Reports.Monthly;
 
-public class MonthlyGrossReportService(IOptionsMonitor<ReportConfiguration> configurationMonitor, IMovieProvider movieProvider) : ReportService
+public class MonthlyGrossReportService(ILogger<ReportService> logger, IOptionsMonitor<ReportConfiguration> configurationMonitor, IMovieProvider movieProvider) : ReportService
 {
     private const string ReportPath = "RentalReports/GrossMovieByPeriod";
     private const string CardReportPath = "RentalReports/MovieByPeriodPushkin";
@@ -28,11 +29,12 @@ public class MonthlyGrossReportService(IOptionsMonitor<ReportConfiguration> conf
 
         var newFileName = $"По сборам за период {from:dd.MM.yy} - {to:dd.MM.yy}.xlsx";
         var newFilePath = Path.Combine(sessionPath, newFileName);
+        logger.LogInformation("Downloading {FileName}", newFileName);
         await reportProvider.DownloadReportToFileAsync(ReportPath, newFilePath, ReportFormat.EXCELOPENXML, from, to);
 
         ProgressDownload();
         
-        var grossMovieData = ParseGrossMovieData(newFilePath);
+        var grossMovieData = GrossMovieData.Parse(newFilePath);
         await FillMonthlyReport(grossMovieData, from, to, reportProvider);
         
         ProgressDownload();
@@ -105,55 +107,13 @@ public class MonthlyGrossReportService(IOptionsMonitor<ReportConfiguration> conf
         document.SaveAs(newFilePath);
     }
 
-    public static HashSet<GrossMovieData> ParseGrossMovieData(string grossReportFilePath)
-    {
-        var grossMovieData = new HashSet<GrossMovieData>();
-        using var workbook = new XLWorkbook(grossReportFilePath);
-        var worksheet = workbook.Worksheets.First();
-
-        var currentMovieTitle = string.Empty;
-
-        // TODO Use RowsUsed instead?
-        // Пропускаем первые 4 строки (заголовки)
-        foreach (var row in worksheet.Rows().Skip(4))
-        {
-            var firstCell = row.Cell(1);
-            var firstCellValue = firstCell.GetValue<string>().Trim();
-
-            // Если ячейка во втором столбце пустая, а в первом нет, и это не "Итог" - это название фильма
-            if (!string.IsNullOrWhiteSpace(firstCellValue) && row.Cell(2).IsEmpty())
-            {
-                if (!firstCellValue.Equals("итог", StringComparison.OrdinalIgnoreCase))
-                {
-                    currentMovieTitle = firstCellValue;
-                }
-            }
-            
-            // Если в первой ячейке "Итог", это строка с итоговыми данными для фильма
-            if (!firstCellValue.Equals("итог", StringComparison.OrdinalIgnoreCase)) continue;
-            if (string.IsNullOrEmpty(currentMovieTitle)) continue;
-            
-            var movieData = new GrossMovieData
-            (
-                currentMovieTitle[..^2].Trim(),
-                currentMovieTitle.Substring(currentMovieTitle.Length - 2, 2).Trim(),
-                row.Cell(2).GetValue<int>(),
-                row.Cell(3).GetValue<int>(),
-                row.Cell(4).GetValue<int>()
-            );
-            grossMovieData.Add(movieData);
-            currentMovieTitle = string.Empty; // Сбрасываем для следующего фильма
-        }
-
-        return grossMovieData;
-    }
-
     private async Task<int> GetCardViewerCount(DateTime from, DateTime to, ReportProvider reportProvider)
     {
         var sessionPath = GetSessionPath(from, to);
         
         var newFileName = $"По пушкинской {from:dd.MM.yy} - {to:dd.MM.yy}.xlsx";
         var newFilePath = Path.Combine(sessionPath, newFileName);
+        logger.LogInformation("Downloading {FileName}", newFileName);
         await reportProvider.DownloadReportToFileAsync(CardReportPath, newFilePath, ReportFormat.EXCELOPENXML, from, to);
         
         ProgressDownload();

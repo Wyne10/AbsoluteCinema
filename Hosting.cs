@@ -2,6 +2,7 @@ using AbsoluteCinema.Configuration;
 using AbsoluteCinema.Services.Movies;
 using AbsoluteCinema.Services.Reports;
 using AbsoluteCinema.Services.Reports.Monthly;
+using AbsoluteCinema.Services.Reports.Quarterly;
 using AbsoluteCinema.Services.Reports.Weekly;
 using AbsoluteCinema.ViewModels;
 using Microsoft.Extensions.Configuration;
@@ -28,7 +29,8 @@ public static class Hosting
         {
             return builder.Services
                 .Configure<MovieProviderConfiguration>(builder.Configuration.GetSection("Movie"))
-                .Configure<ReportConfiguration>("MonthlyReport", builder.Configuration.GetSection("Report:Monthly"));
+                .Configure<ReportConfiguration>("MonthlyReport", builder.Configuration.GetSection("Report:Monthly"))
+                .Configure<ReportConfiguration>("QuarterlyReport", builder.Configuration.GetSection("Report:Quarterly"));
         }
         
         public ILoggingBuilder ConfigureLogger()
@@ -53,6 +55,7 @@ public static class Hosting
                 .AddTransient<MonthlyPaymentReportService>()
                 .AddTransient<MonthlyGrossReportService>()
                 .AddKeyedTransient<IReportService, MonthlyReportService>("monthly")
+                .AddKeyedTransient<IReportService, QuarterlyReportService>("quarterly")
                 // View models
                 .AddTransient<MainWindowViewModel>()
                 .AddTransient<ReportsViewModel>()
