@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using AbsoluteCinema.Configuration;
 using AbsoluteCinema.Dtos;
@@ -19,26 +20,26 @@ public class QuarterlyReportService(ILogger<ReportService> logger, IOptionsMonit
     
     private ReportConfiguration Configuration => configurationMonitor.Get("QuarterlyReport");
     
-    public override async Task<string> GenerateReportFiles(DateTime from, DateTime to, ReportProvider reportProvider)
+    public override async Task<string> GenerateReportFiles(DateTime from, DateTime to, ReportProvider reportProvider, CancellationToken cancellationToken = default)
     {
         var sessionPath = GetSessionPath(from, to);
 
         var newFileName = $"По сборам за период {from:dd.MM.yy} - {to:dd.MM.yy}.xlsx";
         var newFilePath = Path.Combine(sessionPath, newFileName);
         logger.LogInformation("Downloading {FileName}", newFileName);
-        await reportProvider.DownloadReportToFileAsync(ReportPath, newFilePath, ReportFormat.EXCELOPENXML, from, to);
+        await reportProvider.DownloadReportToFileAsync(ReportPath, newFilePath, ReportFormat.EXCELOPENXML, from, to, cancellationToken: cancellationToken);
 
         ProgressDownload();
         
         var grossMovieData = GrossMovieData.Parse(newFilePath);
-        await FillQuarterlyReport(grossMovieData, from, to, reportProvider);
+        await FillQuarterlyReport(grossMovieData, from, to, cancellationToken);
 
         ProgressDownload();
         
         return sessionPath;
     } 
     
-    private async Task FillQuarterlyReport(IReadOnlyCollection<GrossMovieData> grossMovieData, DateTime from, DateTime to, ReportProvider reportProvider)
+    private async Task FillQuarterlyReport(IReadOnlyCollection<GrossMovieData> grossMovieData, DateTime from, DateTime to, CancellationToken cancellationToken = default)
     {
         var templatePath = Configuration.TemplatePath;
         if (string.IsNullOrWhiteSpace(templatePath))
@@ -47,7 +48,7 @@ public class QuarterlyReportService(ILogger<ReportService> logger, IOptionsMonit
         using var workbook = new XLWorkbook(templatePath);
         using var certificateProvider = new CertificateProvider(logger);
         var worksheet = workbook.Worksheets.First();
-        var certificates = await certificateProvider.GetCertificatesAsync(grossMovieData.Select(data => data.MovieName).ToList());
+        var certificates = await certificateProvider.GetCertificatesAsync(grossMovieData.Select(data => data.MovieName).ToList(), cancellationToken);
 
         worksheet.Row(12).Cell("C").Value = from.ToString("dd.MM.yy");
         worksheet.Row(12).Cell("E").Value = to.ToString("dd.MM.yy");

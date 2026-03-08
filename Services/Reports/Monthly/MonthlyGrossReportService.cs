@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using AbsoluteCinema.Configuration;
 using AbsoluteCinema.Dtos;
@@ -23,26 +24,26 @@ public class MonthlyGrossReportService(ILogger<ReportService> logger, IOptionsMo
 
     private ReportConfiguration Configuration => configurationMonitor.Get("MonthlyReport");
 
-    public override async Task<string> GenerateReportFiles(DateTime from, DateTime to, ReportProvider reportProvider)
+    public override async Task<string> GenerateReportFiles(DateTime from, DateTime to, ReportProvider reportProvider, CancellationToken cancellationToken = default)
     {
         var sessionPath = GetSessionPath(from, to);
 
         var newFileName = $"По сборам за период {from:dd.MM.yy} - {to:dd.MM.yy}.xlsx";
         var newFilePath = Path.Combine(sessionPath, newFileName);
         logger.LogInformation("Downloading {FileName}", newFileName);
-        await reportProvider.DownloadReportToFileAsync(ReportPath, newFilePath, ReportFormat.EXCELOPENXML, from, to);
+        await reportProvider.DownloadReportToFileAsync(ReportPath, newFilePath, ReportFormat.EXCELOPENXML, from, to, cancellationToken: cancellationToken);
 
         ProgressDownload();
         
         var grossMovieData = GrossMovieData.Parse(newFilePath);
-        await FillMonthlyReport(grossMovieData, from, to, reportProvider);
+        await FillMonthlyReport(grossMovieData, from, to, reportProvider, cancellationToken);
         
         ProgressDownload();
 
         return sessionPath;
     }
 
-    private async Task FillMonthlyReport(IReadOnlyCollection<GrossMovieData> grossMovieData, DateTime from, DateTime to, ReportProvider reportProvider)
+    private async Task FillMonthlyReport(IReadOnlyCollection<GrossMovieData> grossMovieData, DateTime from, DateTime to, ReportProvider reportProvider, CancellationToken cancellationToken = default)
     {
         var templatePath = Configuration.TemplatePath;
         if (string.IsNullOrWhiteSpace(templatePath))
@@ -78,7 +79,7 @@ public class MonthlyGrossReportService(ILogger<ReportService> logger, IOptionsMo
         document.ReplaceText(new StringReplaceTextOptions 
             { SearchValue = "{{movie_russian}}", NewValue = russianMovies.Count.ToString() });
         document.ReplaceText(new StringReplaceTextOptions 
-            { SearchValue = "{{viewer_card}}", NewValue = (await GetCardViewerCount(from, to, reportProvider)).ToString() });
+            { SearchValue = "{{viewer_card}}", NewValue = (await GetCardViewerCount(from, to, reportProvider, cancellationToken)).ToString() });
         document.ReplaceText(new StringReplaceTextOptions 
             { SearchValue = "{{session_russian}}", NewValue = russianMovies.Sum(data => data.SessionCount).ToString() });
         document.ReplaceText(new StringReplaceTextOptions 
@@ -107,14 +108,14 @@ public class MonthlyGrossReportService(ILogger<ReportService> logger, IOptionsMo
         document.SaveAs(newFilePath);
     }
 
-    private async Task<int> GetCardViewerCount(DateTime from, DateTime to, ReportProvider reportProvider)
+    private async Task<int> GetCardViewerCount(DateTime from, DateTime to, ReportProvider reportProvider, CancellationToken cancellationToken = default)
     {
         var sessionPath = GetSessionPath(from, to);
         
         var newFileName = $"По пушкинской {from:dd.MM.yy} - {to:dd.MM.yy}.xlsx";
         var newFilePath = Path.Combine(sessionPath, newFileName);
         logger.LogInformation("Downloading {FileName}", newFileName);
-        await reportProvider.DownloadReportToFileAsync(CardReportPath, newFilePath, ReportFormat.EXCELOPENXML, from, to);
+        await reportProvider.DownloadReportToFileAsync(CardReportPath, newFilePath, ReportFormat.EXCELOPENXML, from, to, cancellationToken: cancellationToken);
         
         ProgressDownload();
         

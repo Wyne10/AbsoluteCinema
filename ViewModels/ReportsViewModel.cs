@@ -13,6 +13,7 @@ using Avalonia.Controls.Primitives;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
@@ -20,7 +21,7 @@ using ReportProvider = AbsoluteCinema.Services.Reports.ReportProvider;
 
 namespace AbsoluteCinema.ViewModels;
 
-public partial class ReportsViewModel(IServiceProvider serviceProvider, ILogger<ReportsViewModel> logger)
+public partial class ReportsViewModel(IServiceProvider serviceProvider, ILogger<ReportsViewModel> logger, IHostApplicationLifetime lifetime)
     : ViewModelBase
 {
     private SelectedDatesCollection? _selectedDates;
@@ -121,7 +122,7 @@ public partial class ReportsViewModel(IServiceProvider serviceProvider, ILogger<
         {
             IsGenerating = true;
             using var reportProvider = new ReportProvider(logger);
-            await _reportService!.GenerateReportFiles(_selectedDates.First(), _selectedDates.Last(), reportProvider);
+            await _reportService!.GenerateReportFiles(_selectedDates.First(), _selectedDates.Last(), reportProvider, lifetime.ApplicationStopping);
         }
         catch (Exception ex)
         {
@@ -139,6 +140,6 @@ public partial class ReportsViewModel(IServiceProvider serviceProvider, ILogger<
 
     public bool CanGenerateReport()
     {
-        return _selectedDates != null && _selectedDates?.Count >= 2 && _reportService is not null && !IsGenerating;
+        return _selectedDates is { Count: >= 2 } && _reportService is not null && !IsGenerating;
     }
 }

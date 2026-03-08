@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using AbsoluteCinema.Models;
@@ -14,7 +14,7 @@ namespace AbsoluteCinema.Services.Reports;
 
 public partial class ReportProvider(ILogger logger, string baseUrl = "http://192.168.3.150") : CinemaWebAccessor(baseUrl)
 {
-    private async Task<byte[]> DownloadReportAsync(string reportPath, ReportFormat format, DateTime? startDate = null, DateTime? endDate = null, Dictionary<string, string>? fields = null)
+    private async Task<byte[]> DownloadReportAsync(string reportPath, ReportFormat format, DateTime? startDate = null, DateTime? endDate = null, Dictionary<string, string>? fields = null, CancellationToken cancellationToken = default)
     {
         logger.LogInformation("Starting download at {ReportPath}", reportPath);
         if (!IsAuthenticated)
@@ -27,7 +27,7 @@ public partial class ReportProvider(ILogger logger, string baseUrl = "http://192
         // Initialize report in session
         logger.LogTrace("Initializing report session...");
         var renderResponse = await HttpClient.GetAsync(
-            $"/CinemaWeb/Report/Render?path={HttpUtility.UrlEncode(reportPath)}");
+            $"/CinemaWeb/Report/Render?path={HttpUtility.UrlEncode(reportPath)}", cancellationToken);
 
         if (renderResponse.RequestMessage == null || renderResponse.RequestMessage.RequestUri == null)
             throw new Exception("Empty response from report session");
@@ -41,7 +41,7 @@ public partial class ReportProvider(ILogger logger, string baseUrl = "http://192
 
         // Load report form
         logger.LogTrace("Extracting report form fields...");
-        var pageContent = await HttpClient.GetStringAsync("/CinemaWeb/ReportViewerWebForm.aspx");
+        var pageContent = await HttpClient.GetStringAsync("/CinemaWeb/ReportViewerWebForm.aspx", cancellationToken);
 
         // Extract and modify form fields
         var formFields = ExtractFormFields(pageContent);
@@ -77,10 +77,10 @@ public partial class ReportProvider(ILogger logger, string baseUrl = "http://192
 
         var postResponse = await HttpClient.PostAsync(
             "/CinemaWeb/ReportViewerWebForm.aspx",
-            new FormUrlEncodedContent(formFields));
+            new FormUrlEncodedContent(formFields), cancellationToken);
 
         logger.LogTrace("Extracting session data...");
-        var postContent = await postResponse.Content.ReadAsStringAsync();
+        var postContent = await postResponse.Content.ReadAsStringAsync(cancellationToken);
 
         // Extract session and export
         var sessionMatch = ReportSessionRegex().Match(postContent);
@@ -99,8 +99,8 @@ public partial class ReportProvider(ILogger logger, string baseUrl = "http://192
                         $"&ReportStack=1&ContentDisposition=OnlyHtmlInline";
 
         logger.LogTrace("Exporting report...");
-        var exportResponse = await HttpClient.GetAsync(exportUrl);
-        var content = await exportResponse.Content.ReadAsByteArrayAsync();
+        var exportResponse = await HttpClient.GetAsync(exportUrl, cancellationToken);
+        var content = await exportResponse.Content.ReadAsByteArrayAsync(cancellationToken);
 
         var contentType = exportResponse.Content.Headers.ContentType?.MediaType ?? "";
         if (contentType.Contains("text/html") && content.Length < 10000)
@@ -156,13 +156,14 @@ public partial class ReportProvider(ILogger logger, string baseUrl = "http://192
         ReportFormat format,
         DateTime? startDate = null,
         DateTime? endDate = null,
-        Dictionary<string, string>? fields = null)
+        Dictionary<string, string>? fields = null,
+        CancellationToken cancellationToken = default)
     {
-        var content = await DownloadReportAsync(reportPath, format, startDate, endDate, fields);
+        var content = await DownloadReportAsync(reportPath, format, startDate, endDate, fields, cancellationToken);
         var directoryPath = Path.GetDirectoryName(outputPath);
         if (!string.IsNullOrEmpty(directoryPath))
             Directory.CreateDirectory(directoryPath);
-        await File.WriteAllBytesAsync(outputPath, content);
+        await File.WriteAllBytesAsync(outputPath, content, cancellationToken);
     }
 
     [GeneratedRegex(@"\d{2}\.\d{2}\.\d{4}")]

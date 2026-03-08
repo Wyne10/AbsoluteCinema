@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using AbsoluteCinema.Models;
 using Microsoft.Extensions.Logging;
@@ -12,7 +13,7 @@ public class WeeklyRentalsReportService(ILogger<ReportService> logger) : ReportS
     private const string ReportPath = "CashReports/CashTotalToday";
     private const string ShowRentalsSelector = "ReportViewer1$ctl04$ctl07$ddValue";
 
-    public override async Task<string> GenerateReportFiles(DateTime from, DateTime to, ReportProvider reportProvider)
+    public override async Task<string> GenerateReportFiles(DateTime from, DateTime to, ReportProvider reportProvider, CancellationToken cancellationToken = default)
     {
         var sessionPath = GetSessionPath(from, to);
 
@@ -25,7 +26,7 @@ public class WeeklyRentalsReportService(ILogger<ReportService> logger) : ReportS
                 new Dictionary<string, string>
                 {
                     [ShowRentalsSelector] = "1"
-                });
+                }, cancellationToken);
             
             ProgressDownload();
         }

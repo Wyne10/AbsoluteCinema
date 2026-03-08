@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace AbsoluteCinema.Services.Reports;
@@ -15,7 +16,7 @@ public abstract class ReportService : IReportService
         return sessionPath;
     }
 
-    public abstract Task<string> GenerateReportFiles(DateTime from, DateTime to, ReportProvider reportProvider);
+    public abstract Task<string> GenerateReportFiles(DateTime from, DateTime to, ReportProvider reportProvider, CancellationToken cancellationToken = default);
 
     protected void ProgressDownload()
     {

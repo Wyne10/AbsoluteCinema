@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using AbsoluteCinema.Models;
 using Microsoft.Extensions.Logging;
@@ -10,7 +11,7 @@ public class WeeklyCashierReportService(ILogger<ReportService> logger) : ReportS
 {
     private const string ReportPath = "CashReports/CashTodayByUsers";
 
-    public override async Task<string> GenerateReportFiles(DateTime from, DateTime to, ReportProvider reportProvider)
+    public override async Task<string> GenerateReportFiles(DateTime from, DateTime to, ReportProvider reportProvider, CancellationToken cancellationToken = default)
     {
         var sessionPath = GetSessionPath(from, to);
 
@@ -19,7 +20,7 @@ public class WeeklyCashierReportService(ILogger<ReportService> logger) : ReportS
             var newFileName = $"Разбивкой по кассирам {date:dd.MM.yy}.pdf";
             var newFilePath = Path.Combine(sessionPath, newFileName);
             logger.LogInformation("Downloading {FileName}", newFileName);
-            await reportProvider.DownloadReportToFileAsync(ReportPath, newFilePath, ReportFormat.PDF, date);
+            await reportProvider.DownloadReportToFileAsync(ReportPath, newFilePath, ReportFormat.PDF, date, cancellationToken: cancellationToken);
             
             ProgressDownload();
         }

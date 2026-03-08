@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace AbsoluteCinema.Services;
@@ -29,9 +30,9 @@ public abstract partial class CinemaWebAccessor : IDisposable
         };
     }
     
-    protected async Task<bool> LoginAsync(string username = "Администратор", string password = "")
+    protected async Task<bool> LoginAsync(string username = "Администратор", string password = "", CancellationToken cancellationToken = default)
     {
-        var loginPage = await HttpClient.GetStringAsync("/CinemaWeb/Account/Login");
+        var loginPage = await HttpClient.GetStringAsync("/CinemaWeb/Account/Login", cancellationToken);
 
         var tokenMatch = ForgeryTokenRegex().Match(loginPage);
 
@@ -45,7 +46,7 @@ public abstract partial class CinemaWebAccessor : IDisposable
             new KeyValuePair<string, string>("RememberMe", "false")
         ]);
 
-        var response = await HttpClient.PostAsync("/CinemaWeb/Account/Login", loginData);
+        var response = await HttpClient.PostAsync("/CinemaWeb/Account/Login", loginData, cancellationToken);
         IsAuthenticated = !response.RequestMessage?.RequestUri?.ToString().Contains("Account/Login") ?? false;
 
         return IsAuthenticated ? true : throw new Exception("Authentication failed");

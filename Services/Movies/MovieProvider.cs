@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using AbsoluteCinema.Configuration;
@@ -24,7 +25,8 @@ public class MovieProvider : IMovieProvider
     private readonly ILogger<MovieProvider> _logger;
     
     private readonly string _movieCacheFilePath;
-    private readonly Dictionary<string, Dtos.Movie> _movieCache;
+    private readonly Dictionary<string, Movie> _movieCache;
+    private readonly JsonSerializerOptions _jsonSerializerOptions = new() { WriteIndented = true };
 
     public MovieProvider(IOptionsMonitor<MovieProviderConfiguration> configurationMonitor, ILogger<MovieProvider> logger)
     {
@@ -39,24 +41,24 @@ public class MovieProvider : IMovieProvider
         _logger.LogInformation("Loaded {MovieCacheCount} Poiskkino movie cache entries", _movieCache.Count);
     }
     
-    public async Task<Dictionary<string, Dtos.Movie>> GetMovies(IEnumerable<string> movieNames)
+    public async Task<Dictionary<string, Movie>> GetMovies(IEnumerable<string> movieNames, CancellationToken cancellationToken = default)
     {
-        var movies = new Dictionary<string, Dtos.Movie>();
+        var movies = new Dictionary<string, Movie>();
         foreach (var movieName in movieNames)
         {
-            var movie = await GetMovie(movieName);
+            var movie = await GetMovie(movieName, cancellationToken);
             if (movie != null)
                 movies[movieName] = movie;
         }
         return movies;
     }
 
-    private async Task<Dtos.Movie?> GetMovie(string movieName)
+    private async Task<Movie?> GetMovie(string movieName, CancellationToken cancellationToken = default)
     {
-        return _movieCache.TryGetValue(movieName, out var movie) ? movie : WriteMovieCache(movieName, await FetchMovieData(movieName));
+        return _movieCache.TryGetValue(movieName, out var movie) ? movie : WriteMovieCache(movieName, await FetchMovieData(movieName, cancellationToken));
     }
 
-    private async Task<Dtos.Movie?> FetchMovieData(string movieName)
+    private async Task<Movie?> FetchMovieData(string movieName, CancellationToken cancellationToken = default)
     {
         var apiToken = Configuration.ApiToken;
         if (string.IsNullOrWhiteSpace(apiToken))
@@ -74,10 +76,10 @@ public class MovieProvider : IMovieProvider
         request.Headers.Add("X-API-KEY", apiToken);
 
         _logger.LogInformation("Fetching movie {MovieName} from Poiskkino API...", movieName);
-        var response = await _httpClient.SendAsync(request);
+        var response = await _httpClient.SendAsync(request, cancellationToken);
         response.EnsureSuccessStatusCode();
 
-        var jsonResponse = await response.Content.ReadAsStringAsync();
+        var jsonResponse = await response.Content.ReadAsStringAsync(cancellationToken);
         var searchResult = JsonSerializer.Deserialize<SearchResponse>(jsonResponse);
 
         var movieDto = searchResult?.Docs
@@ -92,7 +94,7 @@ public class MovieProvider : IMovieProvider
         return movieDto;
     }
 
-    private Dtos.Movie? WriteMovieCache(string movieName, Dtos.Movie? movie)
+    private Movie? WriteMovieCache(string movieName, Movie? movie)
     {
         if (movie == null)
             return movie; 
@@ -101,28 +103,28 @@ public class MovieProvider : IMovieProvider
         return movie;
     }
     
-    private Dictionary<string, Dtos.Movie> LoadMovieCache()
+    private Dictionary<string, Movie> LoadMovieCache()
     {
         if (!File.Exists(_movieCacheFilePath))
-            return new Dictionary<string, Dtos.Movie>();
+            return new Dictionary<string, Movie>();
 
         try
         {
             var json = File.ReadAllText(_movieCacheFilePath);
-            return JsonSerializer.Deserialize<Dictionary<string, Dtos.Movie>>(json) ?? new Dictionary<string, Dtos.Movie>();
+            return JsonSerializer.Deserialize<Dictionary<string, Movie>>(json) ?? new Dictionary<string, Movie>();
         }
         catch
         {
-            return new Dictionary<string, Dtos.Movie>();
+            return new Dictionary<string, Movie>();
         }
     }
 
-    private async void SaveMovieCache()
+    private async void SaveMovieCache(CancellationToken cancellationToken = default)
     {
         try
         {
-            var json = JsonSerializer.Serialize(_movieCache, new JsonSerializerOptions { WriteIndented = true });
-            await File.WriteAllTextAsync(_movieCacheFilePath, json);
+            var json = JsonSerializer.Serialize(_movieCache, _jsonSerializerOptions);
+            await File.WriteAllTextAsync(_movieCacheFilePath, json, cancellationToken);
         }
         catch (Exception e)
         {

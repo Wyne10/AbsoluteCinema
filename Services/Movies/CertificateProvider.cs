@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
@@ -9,7 +10,7 @@ namespace AbsoluteCinema.Services.Movies;
 
 public partial class CertificateProvider(ILogger logger, string baseUrl = "http://192.168.3.150") : CinemaWebAccessor(baseUrl)
 {
-    public async Task<Dictionary<string, string>> GetCertificatesAsync(IEnumerable<string> movieNames)
+    public async Task<Dictionary<string, string>> GetCertificatesAsync(IEnumerable<string> movieNames, CancellationToken cancellationToken = default)
     {
         var movieSet = movieNames.ToHashSet();
         var certificates = new Dictionary<string, string>();
@@ -24,14 +25,14 @@ public partial class CertificateProvider(ILogger logger, string baseUrl = "http:
 
         // Fetch "В прокате"
         logger.LogTrace("Parsing active certificates...");
-        var activePage = await HttpClient.GetStringAsync("/CinemaWeb/Movie");
+        var activePage = await HttpClient.GetStringAsync("/CinemaWeb/Movie", cancellationToken);
         ParseTable(activePage, certificates);
 
         // Fetch "Архивные"
         logger.LogTrace("Parsing archived certificates...");
         var response = await HttpClient.PostAsync("/CinemaWeb/Movie/IndexSetFilter",
-            new FormUrlEncodedContent([new KeyValuePair<string, string>("movieFilter", "InArchive")]));
-        var archivedPage = await response.Content.ReadAsStringAsync();
+            new FormUrlEncodedContent([new KeyValuePair<string, string>("movieFilter", "InArchive")]), cancellationToken);
+        var archivedPage = await response.Content.ReadAsStringAsync(cancellationToken);
         ParseTable(archivedPage, certificates);
 
         var result = certificates

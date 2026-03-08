@@ -1,9 +1,10 @@
 ﻿using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace AbsoluteCinema.Services.Movies;
 
 public interface IMovieProvider
 {
-    Task<Dictionary<string, Dtos.Movie>> GetMovies(IEnumerable<string> movieNames);
+    Task<Dictionary<string, Dtos.Movie>> GetMovies(IEnumerable<string> movieNames, CancellationToken cancellationToken = default);
 }
