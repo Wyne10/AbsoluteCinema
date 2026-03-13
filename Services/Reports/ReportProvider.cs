@@ -18,9 +18,9 @@ public partial class ReportProvider(ILogger logger, string baseUrl = "http://192
     {
         logger.LogInformation("Starting download at {ReportPath}", reportPath);
         if (!IsAuthenticated)
-        {
-           logger.LogDebug("Not authenticated, trying to login..."); 
-            if (await LoginAsync())
+        { 
+            logger.LogDebug("Not authenticated, trying to login..."); 
+            if (await LoginAsync(cancellationToken: cancellationToken))
                 logger.LogDebug("Authentication successful");
         }
 

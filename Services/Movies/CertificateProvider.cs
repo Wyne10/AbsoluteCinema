@@ -19,7 +19,7 @@ public partial class CertificateProvider(ILogger logger, string baseUrl = "http:
         if (!IsAuthenticated)
         {
             logger.LogDebug("Not authenticated, trying to login..."); 
-            if (await LoginAsync())
+            if (await LoginAsync(cancellationToken: cancellationToken))
                 logger.LogDebug("Authentication successful");
         }
 
