@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Text.RegularExpressions;
@@ -15,100 +17,88 @@ public partial class CinemaWebMovieProvider(ILogger logger, string baseUrl = "ht
     public async Task<Dictionary<string, CinemaWebMovie>> GetMoviesAsync(IEnumerable<string> movieNames, CancellationToken cancellationToken = default)
     {
         var movieSet = movieNames.ToHashSet();
-        logger.LogInformation("Fetching CinemaWeb movie details for {Count} movies", movieSet.Count);
+        logger.LogInformation("Fetching CinemaWeb movies for {Count} movies", movieSet.Count);
 
-        if (!IsAuthenticated)
-        {
-            logger.LogDebug("Not authenticated, trying to login...");
-            if (await LoginAsync(cancellationToken: cancellationToken))
-                logger.LogDebug("Authentication successful");
-        }
+        await EnsureAuthenticatedAsync(logger, cancellationToken);
 
-        var movieIdMap = await GetMovieIdMapAsync(cancellationToken);
-        var result = new Dictionary<string, CinemaWebMovie>();
+        logger.LogTrace("Fetching active movie list...");
+        var activePage = await HttpClient.GetStringAsync("/CinemaWeb/Movie", cancellationToken);
+        var allMovies = ParseMoviesFromTable(activePage);
 
-        foreach (var name in movieSet)
-        {
-            if (!movieIdMap.TryGetValue(name, out var id))
-            {
-                logger.LogWarning("Movie not found in CinemaWeb: {Name}", name);
-                continue;
-            }
+        logger.LogTrace("Fetching archived movie list...");
+        var response = await HttpClient.PostAsync("/CinemaWeb/Movie/IndexSetFilter",
+            new FormUrlEncodedContent([new KeyValuePair<string, string>("movieFilter", "InArchive")]), cancellationToken);
+        var archivedPage = await response.Content.ReadAsStringAsync(cancellationToken);
+        foreach (var kv in ParseMoviesFromTable(archivedPage))
+            allMovies.TryAdd(kv.Key, kv.Value);
 
-            var movie = await GetMovieDetailsAsync(id, cancellationToken);
-            if (movie != null)
-                result[name] = movie;
-        }
+        var result = allMovies
+            .Where(kv => movieSet.Contains(kv.Key))
+            .ToDictionary(kv => kv.Key, kv => kv.Value);
 
-        logger.LogInformation("Fetched {Count} movie details", result.Count);
+        logger.LogInformation("Fetched {Count} movies", result.Count);
         return result;
     }
 
     public async Task<List<CinemaWebMovie>> GetActiveMoviesAsync(CancellationToken cancellationToken = default)
     {
-        logger.LogInformation("Fetching all active CinemaWeb movies");
+        logger.LogInformation("Fetching active CinemaWeb movies with details");
 
-        if (!IsAuthenticated)
-        {
-            logger.LogDebug("Not authenticated, trying to login...");
-            if (await LoginAsync(cancellationToken: cancellationToken))
-                logger.LogDebug("Authentication successful");
-        }
+        await EnsureAuthenticatedAsync(logger, cancellationToken);
 
-        var activeIds = await GetMovieIdsAsync("/CinemaWeb/Movie", cancellationToken);
+        var html = await HttpClient.GetStringAsync("/CinemaWeb/Movie", cancellationToken);
+        var tableMovies = ParseMoviesFromTable(html);
+
         var movies = new List<CinemaWebMovie>();
 
-        foreach (var id in activeIds)
+        foreach (var movie in tableMovies.Values)
         {
-            var movie = await GetMovieDetailsAsync(id, cancellationToken);
-            if (movie != null)
-                movies.Add(movie);
+            var details = await GetMovieDetailsAsync(movie.Id, cancellationToken);
+            movies.Add(details != null ? movie with { Details = details } : movie);
         }
 
-        logger.LogInformation("Fetched {Count} active movies", movies.Count);
+        logger.LogInformation("Fetched {Count} active movies with details", movies.Count);
         return movies;
     }
 
-    private async Task<Dictionary<string, int>> GetMovieIdMapAsync(CancellationToken cancellationToken)
+    private static Dictionary<string, CinemaWebMovie> ParseMoviesFromTable(string html)
     {
-        var map = new Dictionary<string, int>();
+        var movies = new Dictionary<string, CinemaWebMovie>();
 
-        logger.LogTrace("Fetching active movies list...");
-        var activePage = await HttpClient.GetStringAsync("/CinemaWeb/Movie", cancellationToken);
-        ParseMovieIds(activePage, map);
-
-        logger.LogTrace("Fetching archived movies list...");
-        var response = await HttpClient.PostAsync("/CinemaWeb/Movie/IndexSetFilter",
-            new FormUrlEncodedContent([new KeyValuePair<string, string>("movieFilter", "InArchive")]), cancellationToken);
-        var archivedPage = await response.Content.ReadAsStringAsync(cancellationToken);
-        ParseMovieIds(archivedPage, map);
-
-        logger.LogDebug("Found {Count} movies in CinemaWeb", map.Count);
-        return map;
-    }
-
-    private async Task<List<int>> GetMovieIdsAsync(string url, CancellationToken cancellationToken)
-    {
-        var html = await HttpClient.GetStringAsync(url, cancellationToken);
-        return EditLinkRegex().Matches(html)
-            .Select(m => int.Parse(m.Groups[1].Value))
-            .ToList();
-    }
-
-    private static void ParseMovieIds(string html, Dictionary<string, int> map)
-    {
-        foreach (Match match in EditLinkRegex().Matches(html))
+        foreach (Match table in TableRegex().Matches(html))
         {
-            var id = int.Parse(match.Groups[1].Value);
-            var nameMatch = MovieNameRegex().Match(match.Value);
-            if (!nameMatch.Success) continue;
+            if (!table.Value.Contains("Прокатчик")) continue;
 
-            var name = StripTags(HttpUtility.HtmlDecode(nameMatch.Groups[1].Value));
-            map.TryAdd(name, id);
+            var rows = RowRegex().Matches(table.Value).Skip(1);
+            foreach (var row in rows)
+            {
+                var cells = CellRegex().Matches(row.Value);
+                if (cells.Count < 9) continue;
+
+                var editMatch = EditLinkRegex().Match(row.Value);
+                if (!editMatch.Success) continue;
+
+                var id = int.Parse(editMatch.Groups[1].Value);
+                var name = StripTags(cells[0].Groups[1].Value);
+                if (string.IsNullOrWhiteSpace(name)) continue;
+
+                var durationStr = StripTags(cells[3].Groups[1].Value);
+                int.TryParse(durationStr, out var duration);
+                var distributionBegin = ParseDate(StripTags(cells[4].Groups[1].Value));
+                var distributionEnd = ParseDate(StripTags(cells[5].Groups[1].Value));
+                var ageRestriction = StripTags(cells[6].Groups[1].Value);
+                var certificateNumber = StripTags(cells[7].Groups[1].Value);
+                var format = StripTags(cells[8].Groups[1].Value);
+                var formats = string.IsNullOrWhiteSpace(format) ? [] : format.Split(',', StringSplitOptions.TrimEntries).ToList();
+
+                movies.TryAdd(name, new CinemaWebMovie(id, name, duration, ageRestriction, certificateNumber, formats, distributionBegin, distributionEnd));
+            }
         }
+
+        return movies;
     }
 
-    private async Task<CinemaWebMovie?> GetMovieDetailsAsync(int movieId, CancellationToken cancellationToken)
+    private async Task<CinemaWebMovieDetails?> GetMovieDetailsAsync(int movieId, CancellationToken cancellationToken)
     {
         logger.LogTrace("Fetching movie details for ID {Id}...", movieId);
         var html = await HttpClient.GetStringAsync($"/CinemaWeb/Movie/Edit/{movieId}", cancellationToken);
@@ -117,18 +107,11 @@ public partial class CinemaWebMovieProvider(ILogger logger, string baseUrl = "ht
         if (string.IsNullOrWhiteSpace(name))
             return null;
 
-        var durationStr = ExtractInputValue(html, "Movie_DurationInt");
-        int.TryParse(durationStr, out var duration);
-
-        var ageRestriction = ExtractSelectedOption(html, "Movie_ParentalControl");
-        var certificateNumber = ExtractInputValue(html, "Movie_RentalLicense");
-        var pushkinId = ExtractInputValue(html, "Movie_PushkinID");
-        var description = ExtractTextareaValue(html, "Movie_Story");
-        var country = ExtractInputValue(html, "Countries");
-        var genres = ExtractInputValue(html, "Genres");
-        var formats = ExtractCheckedFormats(html);
-
-        return new CinemaWebMovie(movieId, name, duration, ageRestriction, certificateNumber, pushkinId, formats, description, country, genres);
+        return new CinemaWebMovieDetails(
+            PushkinId: ExtractInputValue(html, "Movie_PushkinID"),
+            Description: ExtractTextareaValue(html, "Movie_Story"),
+            Country: ExtractInputValue(html, "Countries"),
+            Genres: ExtractInputValue(html, "Genres"));
     }
 
     private static string ExtractInputValue(string html, string id)
@@ -155,6 +138,9 @@ public partial class CinemaWebMovieProvider(ILogger logger, string baseUrl = "ht
         return match.Success ? HttpUtility.HtmlDecode(match.Groups[1].Value).Trim() : "";
     }
 
+    private static DateOnly? ParseDate(string value) =>
+        DateOnly.TryParseExact(value, "dd.MM.yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date) ? date : null;
+
     private static List<string> ExtractCheckedFormats(string html)
     {
         var formats = new List<string>();
@@ -179,13 +165,19 @@ public partial class CinemaWebMovieProvider(ILogger logger, string baseUrl = "ht
     private static string StripTags(string html) =>
         TagRegex().Replace(html, "").Replace("&nbsp;", " ").Trim();
 
-    [GeneratedRegex(@"<tr[^>]*>.*?<a[^>]*href=""/CinemaWeb/Movie/Edit/(\d+)""[^>]*>.*?</tr>", RegexOptions.Singleline)]
+    [GeneratedRegex(@"href=""/CinemaWeb/Movie/Edit/(\d+)""", RegexOptions.IgnoreCase)]
     private static partial Regex EditLinkRegex();
 
-    [GeneratedRegex("<td[^>]*>(.*?)</td>", RegexOptions.Singleline)]
-    private static partial Regex MovieNameRegex();
+    [GeneratedRegex(@"<table[^>]*>.*?</table>", RegexOptions.Singleline)]
+    private static partial Regex TableRegex();
 
-    [GeneratedRegex("<option[^>]*selected[^>]*>(.*?)</option>", RegexOptions.IgnoreCase)]
+    [GeneratedRegex(@"<tr[^>]*>.*?</tr>", RegexOptions.Singleline)]
+    private static partial Regex RowRegex();
+
+    [GeneratedRegex(@"<td[^>]*>(.*?)</td>", RegexOptions.Singleline)]
+    private static partial Regex CellRegex();
+
+    [GeneratedRegex(@"<option[^>]*selected[^>]*>(.*?)</option>", RegexOptions.IgnoreCase)]
     private static partial Regex SelectedOptionRegex();
 
     [GeneratedRegex(@"name=""MovieTypesSelection\[(\d+)\]""[^>]*checked", RegexOptions.IgnoreCase)]

@@ -46,9 +46,9 @@ public class QuarterlyReportService(ILogger<ReportService> logger, IOptionsMonit
             throw new Exception("Quarterly report template path is not setup");
 
         using var workbook = new XLWorkbook(templatePath);
-        using var certificateProvider = new CertificateProvider(logger);
+        using var movieProvider = new CinemaWebMovieProvider(logger);
         var worksheet = workbook.Worksheets.First();
-        var certificates = await certificateProvider.GetCertificatesAsync(grossMovieData.Select(data => data.MovieName).ToList(), cancellationToken);
+        var movies = await movieProvider.GetMoviesAsync(grossMovieData.Select(data => data.MovieName).ToList(), cancellationToken);
 
         worksheet.Row(12).Cell("C").Value = from.ToString("dd.MM.yy");
         worksheet.Row(12).Cell("E").Value = to.ToString("dd.MM.yy");
@@ -63,7 +63,7 @@ public class QuarterlyReportService(ILogger<ReportService> logger, IOptionsMonit
 
             row.Cell("A").Value = currentRowNumber - 14;
             row.Cell("B").Value = $"{movieData.MovieName} {movieData.ScreenType}";
-            row.Cell("F").Value = certificates.GetValueOrDefault(movieData.MovieName, string.Empty);
+            row.Cell("F").Value = movies.TryGetValue(movieData.MovieName, out var movie) ? movie.CertificateNumber : string.Empty;
             row.Cell("G").Value = movieData.SessionCount;
             row.Cell("H").Value = movieData.ViewerCount;
             row.Cell("I").Value = movieData.Gross;

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace AbsoluteCinema.Dtos;
@@ -8,8 +9,15 @@ public record CinemaWebMovie(
     int Duration,
     string AgeRestriction,
     string CertificateNumber,
-    string PushkinId,
     List<string> Formats,
+    DateOnly? DistributionBegin,
+    DateOnly? DistributionEnd)
+{
+    public CinemaWebMovieDetails? Details { get; init; }
+}
+
+public record CinemaWebMovieDetails(
+    string PushkinId,
     string Description,
     string Country,
     string Genres);

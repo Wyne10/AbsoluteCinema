@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace AbsoluteCinema.Services;
 
@@ -50,6 +51,15 @@ public abstract partial class CinemaWebAccessor : IDisposable
         IsAuthenticated = !response.RequestMessage?.RequestUri?.ToString().Contains("Account/Login") ?? false;
 
         return IsAuthenticated ? true : throw new Exception("Authentication failed");
+    }
+    
+    protected async Task EnsureAuthenticatedAsync(ILogger logger, CancellationToken cancellationToken)
+    {
+        if (IsAuthenticated) return;
+
+        logger.LogDebug("Not authenticated, trying to login...");
+        if (await LoginAsync(cancellationToken: cancellationToken))
+            logger.LogDebug("Authentication successful");
     }
     
     public void Dispose()
