@@ -51,7 +51,7 @@ public class MonthlyGrossReportService(ILogger<ReportService> logger, IOptionsMo
 
         using var document = DocX.Load(templatePath);
 
-        var movies = await movieProvider.GetMovies(grossMovieData.Select(data => data.MovieName));
+        var movies = await movieProvider.GetMovies(grossMovieData.Select(data => data.MovieName), cancellationToken);
         var russianMovies = grossMovieData.Where(data => movies[data.MovieName].IsRussian()).ToImmutableHashSet();
         var foreignMovies = grossMovieData.Where(data => !movies[data.MovieName].IsRussian()).ToImmutableHashSet();
 

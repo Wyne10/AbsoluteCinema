@@ -110,7 +110,7 @@ public partial class CinemaWebMovieProvider(ILogger logger, string baseUrl = "ht
         return new CinemaWebMovieDetails(
             PushkinId: ExtractInputValue(html, "Movie_PushkinID"),
             Description: ExtractTextareaValue(html, "Movie_Story"),
-            Country: ExtractInputValue(html, "Countries"),
+            Countries: ExtractInputValue(html, "Countries"),
             Genres: ExtractInputValue(html, "Genres"));
     }
 

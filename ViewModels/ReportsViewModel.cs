@@ -79,6 +79,7 @@ public partial class ReportsViewModel(IServiceProvider serviceProvider, ILogger<
             IsGenerating = true;
             using var reportProvider = new ReportProvider(logger);
             await _reportService!.GenerateReportFiles(PeriodStart!.Value, PeriodEnd!.Value, reportProvider, lifetime.ApplicationStopping);
+            logger.LogInformation("Report generated successfully");
         }
         catch (Exception ex)
         {
@@ -94,10 +95,8 @@ public partial class ReportsViewModel(IServiceProvider serviceProvider, ILogger<
         }
     }
 
-    public bool CanGenerateReport()
-    {
-        return HasValidPeriod && _reportService is not null && !IsGenerating;
-    }
+    public bool CanGenerateReport() =>
+        HasValidPeriod && _reportService is not null && !IsGenerating;
 
     protected override string GetFilesFolderPath()
     {

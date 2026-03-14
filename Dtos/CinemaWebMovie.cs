@@ -19,5 +19,5 @@ public record CinemaWebMovie(
 public record CinemaWebMovieDetails(
     string PushkinId,
     string Description,
-    string Country,
+    string Countries,
     string Genres);

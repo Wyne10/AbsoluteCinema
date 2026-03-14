@@ -12,7 +12,7 @@ public abstract class ReportService : IReportService
     public string GetSessionPath(DateTime startDate, DateTime endDate)
     {
         var reportsRootPath = Path.Combine(Path.GetTempPath(), IReportService.ReportsRootPath);
-        var sessionPath = Path.Combine(reportsRootPath, $"Отчет_{startDate:yyyy-MM-dd}_{endDate:yyyy-MM-dd}");
+        var sessionPath = Path.Combine(reportsRootPath, $"Отчет {startDate:yyyy-MM-dd} - {endDate:yyyy-MM-dd}");
         return sessionPath;
     }
 
