@@ -1,6 +1,22 @@
-﻿namespace AbsoluteCinema.ViewModels;
+using CommunityToolkit.Mvvm.ComponentModel;
 
-public partial class MainWindowViewModel(ReportsViewModel reportsViewModel) : ViewModelBase
+namespace AbsoluteCinema.ViewModels;
+
+public partial class MainWindowViewModel(
+    ReportsViewModel reportsViewModel,
+    ScheduleViewModel scheduleViewModel) : ViewModelBase
 {
-    public ReportsViewModel ReportsViewModel { get; } = reportsViewModel;
+    private readonly ViewModelBase[] _pages = [reportsViewModel, scheduleViewModel];
+
+    [ObservableProperty]
+    private ViewModelBase _currentPage = reportsViewModel;
+
+    [ObservableProperty]
+    private int _selectedNavIndex;
+
+    partial void OnSelectedNavIndexChanged(int value)
+    {
+        if (value >= 0 && value < _pages.Length)
+            CurrentPage = _pages[value];
+    }
 }

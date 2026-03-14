@@ -1,0 +1,23 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:AbsoluteCinema.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="600"
+             x:Class="AbsoluteCinema.Views.ScheduleView"
+             x:DataType="vm:ScheduleViewModel">
+
+    <Grid Margin="24" RowDefinitions="Auto,*">
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,24">
+            <TextBlock Text="Расписание"
+                       FontSize="28"
+                       FontWeight="SemiBold"/>
+            <TextBlock Text="Составление расписания и репертуара"
+                       Opacity="0.7"
+                       Margin="0,4,0,0"/>
+        </StackPanel>
+
+    </Grid>
+</UserControl>

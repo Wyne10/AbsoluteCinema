@@ -9,10 +9,10 @@
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
         Title="AbsoluteCinema">
-    
+
     <Grid ColumnDefinitions="Auto,*">
-        <views:NavigationMenuView Grid.Column="0"/>
-        <views:ReportsView Grid.Column="1" DataContext="{Binding ReportsViewModel}"/>
+        <views:NavigationMenuView Grid.Column="0" DataContext="{Binding}"/>
+        <ContentControl Grid.Column="1" Content="{Binding CurrentPage}"/>
     </Grid>
 
 </Window>

@@ -58,7 +58,8 @@ public static class Hosting
                 .AddKeyedTransient<IReportService, QuarterlyReportService>("quarterly")
                 // View models
                 .AddTransient<MainWindowViewModel>()
-                .AddTransient<ReportsViewModel>()
+                .AddSingleton<ReportsViewModel>()
+                .AddSingleton<ScheduleViewModel>()
                 // Singletons
                 .AddSingleton<IMovieProvider, MovieProvider>();
         }

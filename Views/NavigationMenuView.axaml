@@ -1,9 +1,11 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:AbsoluteCinema.ViewModels"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="200" d:DesignHeight="450"
-             x:Class="AbsoluteCinema.Views.NavigationMenuView">
+             x:Class="AbsoluteCinema.Views.NavigationMenuView"
+             x:DataType="vm:MainWindowViewModel">
     <Border Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
             Width="200">
         <DockPanel>
@@ -22,7 +24,7 @@
             <!-- Navigation items -->
             <ListBox DockPanel.Dock="Top"
                      SelectionMode="Single"
-                     SelectedIndex="0">
+                     SelectedIndex="{Binding SelectedNavIndex}">
                 <ListBoxItem>
                     <StackPanel Orientation="Horizontal" Spacing="12">
                         <PathIcon Data="M3 3h18v18H3V3zm2 2v14h14V5H5zm2 2h10v2H7V7zm0 4h10v2H7v-2zm0 4h6v2H7v-2z"
