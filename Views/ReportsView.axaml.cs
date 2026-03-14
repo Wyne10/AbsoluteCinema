@@ -1,56 +1,51 @@
-using System.ComponentModel;
+using System;
 using System.Linq;
 using AbsoluteCinema.ViewModels;
-using AbsoluteCinema.ViewModels.Preview;
 using Avalonia.Controls;
 
 namespace AbsoluteCinema.Views;
 
 public partial class ReportsView : UserControl
 {
-    private readonly ExcelPreviewRenderer? _excelRenderer;
+    private bool _suppressSync;
 
     public ReportsView()
     {
         InitializeComponent();
 
-        _excelRenderer = new ExcelPreviewRenderer(ExcelDataGrid);
-
-        DataContextChanged += (_, _) =>
-        {
-            if (DataContext is ReportsViewModel vm)
-                vm.PropertyChanged += OnViewModelPropertyChanged;
-        };
-
         PeriodCalendar.SelectedDatesChanged += (_, _) =>
         {
-            UpdatePeriodText();
-            if (DataContext is ReportsViewModel vm)
-                vm.OnSelectedDatesChanged(PeriodCalendar.SelectedDates);
-        };
+            if (_suppressSync) return;
 
-        FilesListBox.DoubleTapped += (_, _) =>
-        {
-            if (DataContext is ReportsViewModel vm)
-                vm.OpenReport(this);
+            var dates = PeriodCalendar.SelectedDates.OrderBy(d => d).ToList();
+            StartDateText.Text = dates.Count > 0 ? $"Начало: {dates.First():yyyy-MM-dd}" : "Начало: —";
+            EndDateText.Text = dates.Count > 0 ? $"Конец: {dates.Last():yyyy-MM-dd}" : "Конец: —";
+
+            if (DataContext is ReportsViewModel vm && dates.Count >= 2)
+            {
+                vm.PeriodStart = dates.First();
+                vm.PeriodEnd = dates.Last();
+            }
         };
     }
 
-    private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    protected override void OnDataContextChanged(EventArgs e)
     {
-        if (sender is not ReportsViewModel vm) return;
-        if (e.PropertyName is not nameof(ReportsViewModel.PreviewFilePath)) return;
-        
-        if (vm is { CurrentPreview: PreviewType.Excel, PreviewFilePath: not null })
-            _excelRenderer?.RenderAsync(vm.PreviewFilePath);
-        else
-            _excelRenderer?.Clear();
+        base.OnDataContextChanged(e);
+        RestoreCalendarSelection();
     }
 
-    private void UpdatePeriodText()
+    private void RestoreCalendarSelection()
     {
-        var dates = PeriodCalendar.SelectedDates.OrderBy(d => d).ToList();
-        StartDateText.Text = dates.Count > 0 ? $"Начало: {dates.First():yyyy-MM-dd}" : "Начало: —";
-        EndDateText.Text = dates.Count > 0 ? $"Конец: {dates.Last():yyyy-MM-dd}" : "Конец: —";
+        if (DataContext is not ReportsViewModel { PeriodStart: { } start, PeriodEnd: { } end }) return;
+
+        _suppressSync = true;
+        PeriodCalendar.SelectedDates.Clear();
+        for (var d = start; d <= end; d = d.AddDays(1))
+            PeriodCalendar.SelectedDates.Add(d);
+        _suppressSync = false;
+
+        StartDateText.Text = $"Начало: {start:yyyy-MM-dd}";
+        EndDateText.Text = $"Конец: {end:yyyy-MM-dd}";
     }
 }

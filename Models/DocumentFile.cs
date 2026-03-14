@@ -1,6 +1,6 @@
 namespace AbsoluteCinema.Models;
 
-public record ReportFile(string Path)
+public record DocumentFile(string Path)
 {
     public string Name => System.IO.Path.GetFileNameWithoutExtension(Path);
     public string Extension => System.IO.Path.GetExtension(Path).ToLowerInvariant();

@@ -1,16 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using AbsoluteCinema.Models;
 using AbsoluteCinema.Services.Reports;
-using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Controls.Primitives;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,29 +18,21 @@ using ReportProvider = AbsoluteCinema.Services.Reports.ReportProvider;
 namespace AbsoluteCinema.ViewModels;
 
 public partial class ReportsViewModel(IServiceProvider serviceProvider, ILogger<ReportsViewModel> logger, IHostApplicationLifetime lifetime)
-    : ViewModelBase
+    : FilePreviewViewModel
 {
-    private SelectedDatesCollection? _selectedDates;
-
     public string[] ReportTypes { get; } = ["Еженедельный", "Ежемесячный", "Ежеквартальный"];
-    
+
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(GenerateReportCommand))]
     private string? _selectedReportType;
 
-    public ObservableCollection<ReportFile> ReportFiles { get; } = [];
-    
     [ObservableProperty]
-    private ReportFile? _selectedFile;
-    
-    [ObservableProperty]
-    private PreviewType _currentPreview = PreviewType.None;
+    [NotifyCanExecuteChangedFor(nameof(GenerateReportCommand))]
+    private DateTime? _periodStart;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(PdfPreviewPath))]
-    private string? _previewFilePath;
-
-    public string? PdfPreviewPath => CurrentPreview == PreviewType.Pdf ? PreviewFilePath : null;
+    [NotifyCanExecuteChangedFor(nameof(GenerateReportCommand))]
+    private DateTime? _periodEnd;
 
     private IReportService? _reportService;
 
@@ -53,30 +40,27 @@ public partial class ReportsViewModel(IServiceProvider serviceProvider, ILogger<
     [NotifyCanExecuteChangedFor(nameof(GenerateReportCommand))]
     private bool _isGenerating;
 
-    private List<ReportFile> GetCurrentReports()
+    private bool HasValidPeriod => PeriodStart is not null && PeriodEnd is not null;
+
+    private List<DocumentFile> GetCurrentReports()
     {
-        if (_selectedDates == null || _selectedDates?.Count < 2 || _reportService == null) return [];
-        var reportsPath = _reportService.GetSessionPath(_selectedDates.First(), _selectedDates.Last());
+        if (!HasValidPeriod || _reportService == null) return [];
+        var reportsPath = _reportService.GetSessionPath(PeriodStart!.Value, PeriodEnd!.Value);
         if (!Directory.Exists(reportsPath)) return [];
         var filePaths = Directory.EnumerateFiles(reportsPath);
         var items = filePaths.OrderBy(p => p)
-            .Select(path => new ReportFile(path)).ToList();
+            .Select(path => new DocumentFile(path)).ToList();
         return items;
     }
 
     private void RefreshCurrentReports()
     {
-        ReportFiles.Clear();
-        ReportFiles.AddRange(GetCurrentReports());
+        DocumentFiles.Clear();
+        DocumentFiles.AddRange(GetCurrentReports());
     }
 
-    public void OnSelectedDatesChanged(SelectedDatesCollection value)
-    {
-        if (value.Count < 2) return;
-        _selectedDates = value;
-        RefreshCurrentReports();
-        GenerateReportCommand.NotifyCanExecuteChanged();
-    }
+    partial void OnPeriodStartChanged(DateTime? value) => RefreshCurrentReports();
+    partial void OnPeriodEndChanged(DateTime? value) => RefreshCurrentReports();
 
     partial void OnSelectedReportTypeChanged(string? value)
     {
@@ -93,28 +77,6 @@ public partial class ReportsViewModel(IServiceProvider serviceProvider, ILogger<
         RefreshCurrentReports();
     }
 
-    partial void OnSelectedFileChanged(ReportFile? value)
-    {
-        if (value is null)
-        {
-            CurrentPreview = PreviewType.None;
-            return;
-        }
-        CurrentPreview = value.Extension switch
-        {
-            ".pdf" => PreviewType.Pdf,
-            ".xlsx" or ".xls" => PreviewType.Excel,
-            _ => PreviewType.Unsupported
-        };
-        PreviewFilePath = value.Path;
-    }
-
-    public void OpenReport(Visual visual)
-    {
-        if (SelectedFile == null) return;
-        TopLevel.GetTopLevel(visual)?.Launcher.LaunchUriAsync(new Uri(SelectedFile.Path));
-    }
-
     [RelayCommand(CanExecute = nameof(CanGenerateReport))]
     private async Task GenerateReport()
     {
@@ -123,7 +85,7 @@ public partial class ReportsViewModel(IServiceProvider serviceProvider, ILogger<
         {
             IsGenerating = true;
             using var reportProvider = new ReportProvider(logger);
-            await _reportService!.GenerateReportFiles(_selectedDates.First(), _selectedDates.Last(), reportProvider, lifetime.ApplicationStopping);
+            await _reportService!.GenerateReportFiles(PeriodStart!.Value, PeriodEnd!.Value, reportProvider, lifetime.ApplicationStopping);
         }
         catch (Exception ex)
         {
@@ -141,26 +103,20 @@ public partial class ReportsViewModel(IServiceProvider serviceProvider, ILogger<
 
     public bool CanGenerateReport()
     {
-        return _selectedDates is { Count: >= 2 } && _reportService is not null && !IsGenerating;
+        return HasValidPeriod && _reportService is not null && !IsGenerating;
     }
 
-    [RelayCommand]
-    private void OpenReportsFolder()
+    protected override string GetFilesFolderPath()
     {
         string? pathToOpen = null;
 
-        if (_selectedDates is { Count: >= 2 } && _reportService is not null)
+        if (HasValidPeriod && _reportService is not null)
         {
-            var sessionPath = _reportService.GetSessionPath(_selectedDates.First(), _selectedDates.Last());
+            var sessionPath = _reportService.GetSessionPath(PeriodStart!.Value, PeriodEnd!.Value);
             pathToOpen = Directory.Exists(sessionPath) ? sessionPath : Path.GetDirectoryName(sessionPath);
         }
 
         pathToOpen ??= Path.Combine(Path.GetTempPath(), IReportService.ReportsRootPath);
-
-        if (!Directory.Exists(pathToOpen))
-            Directory.CreateDirectory(pathToOpen);
-
-        if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime { MainWindow: not null } desktop)
-            desktop.MainWindow.Launcher.LaunchUriAsync(new Uri(pathToOpen));
+        return pathToOpen;
     }
 }

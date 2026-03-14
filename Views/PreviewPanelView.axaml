@@ -1,0 +1,70 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:AbsoluteCinema.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:avaloniaPdfViewer="clr-namespace:AvaloniaPdfViewer;assembly=AvaloniaPdfViewer"
+             mc:Ignorable="d"
+             x:Class="AbsoluteCinema.Views.PreviewPanelView"
+             x:DataType="vm:FilePreviewViewModel">
+
+    <Border Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
+            CornerRadius="8"
+            Padding="20">
+        <DockPanel>
+            <TextBlock DockPanel.Dock="Top"
+                       Text="Предпросмотр"
+                       FontSize="16"
+                       FontWeight="SemiBold"
+                       Margin="0,0,0,12"/>
+
+            <Grid>
+                <!-- Placeholder when no file selected -->
+                <StackPanel VerticalAlignment="Center"
+                            HorizontalAlignment="Center"
+                            Spacing="12"
+                            IsVisible="{Binding CurrentPreview,
+                            Converter={x:Static ObjectConverters.Equal},
+                            ConverterParameter={x:Static vm:PreviewType.None}}">
+                    <PathIcon Data="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11zM9 13h6v2H9v-2zm0 4h6v2H9v-2zm0-8h4v2H9V9z"
+                              Width="48" Height="48"
+                              Opacity="0.5"/>
+                    <TextBlock Text="Выберите файл для предпросмотра"
+                               Opacity="0.5"
+                               HorizontalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- PDF Preview -->
+                <avaloniaPdfViewer:PdfViewer
+                    Source="{Binding PdfPreviewPath}"
+                    IsVisible="{Binding CurrentPreview,
+                    Converter={x:Static ObjectConverters.Equal},
+                    ConverterParameter={x:Static vm:PreviewType.Pdf}}"/>
+
+                <!-- Excel Preview (DataGrid) -->
+                <DataGrid Name="ExcelDataGrid"
+                          IsVisible="{Binding CurrentPreview,
+                          Converter={x:Static ObjectConverters.Equal},
+                          ConverterParameter={x:Static vm:PreviewType.Excel}}"
+                          IsReadOnly="True"
+                          AutoGenerateColumns="False"
+                          GridLinesVisibility="All"/>
+
+                <!-- Unsupported -->
+                <StackPanel IsVisible="{Binding CurrentPreview,
+                            Converter={x:Static ObjectConverters.Equal},
+                            ConverterParameter={x:Static vm:PreviewType.Unsupported}}"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Center"
+                            Spacing="12">
+                    <PathIcon Data="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"
+                              Width="48" Height="48"
+                              Opacity="0.5"/>
+                    <TextBlock Text="Предпросмотр не поддерживается"
+                               Opacity="0.7"
+                               HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Grid>
+        </DockPanel>
+    </Border>
+</UserControl>
