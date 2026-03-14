@@ -17,12 +17,8 @@ public partial class ReportProvider(ILogger logger, string baseUrl = "http://192
     private async Task<byte[]> DownloadReportAsync(string reportPath, ReportFormat format, DateTime? startDate = null, DateTime? endDate = null, Dictionary<string, string>? fields = null, CancellationToken cancellationToken = default)
     {
         logger.LogInformation("Starting download at {ReportPath}", reportPath);
-        if (!IsAuthenticated)
-        { 
-            logger.LogDebug("Not authenticated, trying to login..."); 
-            if (await LoginAsync(cancellationToken: cancellationToken))
-                logger.LogDebug("Authentication successful");
-        }
+
+        await EnsureAuthenticatedAsync(logger, cancellationToken);
 
         // Initialize report in session
         logger.LogTrace("Initializing report session...");
