@@ -26,21 +26,11 @@ public partial class ReportsViewModel(IServiceProvider serviceProvider, ILogger<
     [NotifyCanExecuteChangedFor(nameof(GenerateReportCommand))]
     private string? _selectedReportType;
 
-    [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(GenerateReportCommand))]
-    private DateTime? _periodStart;
-
-    [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(GenerateReportCommand))]
-    private DateTime? _periodEnd;
-
     private IReportService? _reportService;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(GenerateReportCommand))]
     private bool _isGenerating;
-
-    private bool HasValidPeriod => PeriodStart is not null && PeriodEnd is not null;
 
     private List<DocumentFile> GetCurrentReports()
     {
@@ -59,8 +49,11 @@ public partial class ReportsViewModel(IServiceProvider serviceProvider, ILogger<
         DocumentFiles.AddRange(GetCurrentReports());
     }
 
-    partial void OnPeriodStartChanged(DateTime? value) => RefreshCurrentReports();
-    partial void OnPeriodEndChanged(DateTime? value) => RefreshCurrentReports();
+    protected override void OnPeriodChanged()
+    {
+        RefreshCurrentReports();
+        GenerateReportCommand.NotifyCanExecuteChanged();
+    }
 
     partial void OnSelectedReportTypeChanged(string? value)
     {

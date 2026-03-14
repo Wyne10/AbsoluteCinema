@@ -11,6 +11,19 @@ namespace AbsoluteCinema.ViewModels;
 
 public abstract partial class FilePreviewViewModel : ViewModelBase
 {
+    [ObservableProperty]
+    private DateTime? _periodStart;
+
+    [ObservableProperty]
+    private DateTime? _periodEnd;
+
+    protected bool HasValidPeriod => PeriodStart is not null && PeriodEnd is not null;
+
+    partial void OnPeriodStartChanged(DateTime? value) => OnPeriodChanged();
+    partial void OnPeriodEndChanged(DateTime? value) => OnPeriodChanged();
+
+    protected virtual void OnPeriodChanged() { }
+
     public ObservableCollection<DocumentFile> DocumentFiles { get; } = [];
 
     [ObservableProperty]

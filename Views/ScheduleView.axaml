@@ -3,14 +3,15 @@
              xmlns:vm="using:AbsoluteCinema.ViewModels"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:views="clr-namespace:AbsoluteCinema.Views"
              mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="600"
              x:Class="AbsoluteCinema.Views.ScheduleView"
              x:DataType="vm:ScheduleViewModel">
 
-    <Grid Margin="24" RowDefinitions="Auto,*">
+    <Grid Margin="24" ColumnDefinitions="*,16,3*" RowDefinitions="Auto,*">
 
         <!-- Header -->
-        <StackPanel Grid.Row="0" Margin="0,0,0,24">
+        <StackPanel Grid.Column="0" Grid.ColumnSpan="3" Margin="0,0,0,24">
             <TextBlock Text="Расписание"
                        FontSize="28"
                        FontWeight="SemiBold"/>
@@ -19,5 +20,63 @@
                        Margin="0,4,0,0"/>
         </StackPanel>
 
+        <!-- Left panel -->
+        <Grid Grid.Row="1" Grid.Column="0" RowDefinitions="Auto,Auto,*">
+
+            <!-- Параметры -->
+            <Border Grid.Row="0"
+                    Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
+                    CornerRadius="8"
+                    Padding="20"
+                    Margin="0,0,0,16">
+                <StackPanel Spacing="16">
+                    <TextBlock Text="Период"
+                               FontSize="16"
+                               FontWeight="SemiBold"/>
+
+                    <StackPanel Orientation="Horizontal"
+                                HorizontalAlignment="Center"
+                                Spacing="24">
+                        <Viewbox MaxHeight="180" MaxWidth="200">
+                            <Calendar Name="PeriodCalendar"
+                                      SelectionMode="SingleRange"/>
+                        </Viewbox>
+                        <StackPanel VerticalAlignment="Center" Spacing="8">
+                            <TextBlock Text="Выбранный период:"
+                                       FontWeight="SemiBold"
+                                       FontSize="12"/>
+                            <StackPanel Spacing="4">
+                                <TextBlock Name="StartDateText"
+                                           Text="Начало: —"
+                                           FontSize="12"
+                                           Opacity="0.8"/>
+                                <TextBlock Name="EndDateText"
+                                           Text="Конец: —"
+                                           FontSize="12"
+                                           Opacity="0.8"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- Кнопка Сгенерировать -->
+            <Button Grid.Row="1"
+                    Command="{Binding GenerateScheduleCommand}"
+                    Content="Сгенерировать расписание"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
+                    Margin="0,0,0,16"
+                    Padding="16,12"
+                    Theme="{DynamicResource SolidButton}"/>
+
+            <!-- Скачанные файлы -->
+            <views:FilesListView Grid.Row="2" DataContext="{Binding}"/>
+        </Grid>
+
+        <GridSplitter Grid.Row="1" Grid.Column="1" ResizeDirection="Columns"/>
+
+        <!-- Preview panel -->
+        <views:PreviewPanelView Grid.Row="1" Grid.Column="2" DataContext="{Binding}"/>
     </Grid>
 </UserControl>

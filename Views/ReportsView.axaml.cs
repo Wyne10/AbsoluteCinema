@@ -45,6 +45,7 @@ public partial class ReportsView : UserControl
             PeriodCalendar.SelectedDates.Add(d);
         _suppressSync = false;
 
+        PeriodCalendar.DisplayDate = start;
         StartDateText.Text = $"Начало: {start:yyyy-MM-dd}";
         EndDateText.Text = $"Конец: {end:yyyy-MM-dd}";
     }
