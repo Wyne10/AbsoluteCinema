@@ -68,6 +68,7 @@ public static class Hosting
                 .AddTransient<MainWindowViewModel>()
                 .AddSingleton<ReportsViewModel>()
                 .AddSingleton<ScheduleViewModel>()
+                .AddTransient<SettingsViewModel>()
                 // Singletons
                 .AddSingleton<IMovieProvider, MovieProvider>();
         }

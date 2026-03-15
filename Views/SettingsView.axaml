@@ -1,0 +1,44 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:AbsoluteCinema.ViewModels"
+             xmlns:models="using:AbsoluteCinema.Models"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="600"
+             x:Class="AbsoluteCinema.Views.SettingsView"
+             x:DataType="vm:SettingsViewModel">
+
+    <Grid Margin="24" RowDefinitions="Auto,*,Auto">
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,24">
+            <TextBlock Text="Настройки"
+                       FontSize="28"
+                       FontWeight="SemiBold"/>
+            <TextBlock Text="Конфигурация приложения"
+                       Opacity="0.7"
+                       Margin="0,4,0,0"/>
+        </StackPanel>
+
+        <!-- Settings groups -->
+        <ScrollViewer Grid.Row="1">
+            <StackPanel Name="SettingsPanel" Spacing="24"/>
+        </ScrollViewer>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="2"
+                    Orientation="Horizontal"
+                    Spacing="12"
+                    Margin="0,16,0,0">
+            <Button Command="{Binding SaveCommand}"
+                    Content="Сохранить"
+                    Padding="24,12"
+                    IsEnabled="{Binding HasUnsavedChanges}"
+                    Theme="{DynamicResource SolidButton}"/>
+            <Button Command="{Binding ResetCommand}"
+                    Content="Сбросить"
+                    Padding="24,12"
+                    IsEnabled="{Binding HasUnsavedChanges}"/>
+        </StackPanel>
+    </Grid>
+</UserControl>
