@@ -13,17 +13,14 @@ using Xceed.Words.NET;
 
 namespace AbsoluteCinema.Services.Schedule;
 
-public class RepertoireService(IOptionsMonitor<ScheduleConfiguration> configurationMonitor) : IScheduleService
+public class RepertoireService(
+    IOptionsMonitor<DocumentRootConfiguration> rootConfiguration,
+    IOptionsMonitor<DocumentTemplateConfiguration> templateConfiguration
+    ) : ScheduleService(rootConfiguration)
 {
-    private ScheduleConfiguration Configuration => configurationMonitor.Get("Repertoire");
+    private DocumentTemplateConfiguration Configuration => templateConfiguration.Get("Repertoire");
 
-    public string GetSessionPath(DateTime startDate, DateTime endDate)
-    {
-        var sessionPath = Path.Combine(Configuration.RootPath, $"Расписание {startDate:yyyy-MM-dd} - {endDate:yyyy-MM-dd}");
-        return sessionPath;
-    }
-
-    public async Task<string> GenerateScheduleFiles(DateTime from, DateTime to, CinemaWebMovieProvider movieProvider,
+    public override async Task<string> GenerateScheduleFiles(DateTime from, DateTime to, CinemaWebMovieProvider movieProvider,
         CancellationToken cancellationToken = default)
     {
         var sessionPath = GetSessionPath(from, to);
@@ -32,7 +29,6 @@ public class RepertoireService(IOptionsMonitor<ScheduleConfiguration> configurat
         FillRepertoire(activeMovies, sessionPath);
         return sessionPath;
     }
-    
     
     private void FillRepertoire(IReadOnlyCollection<CinemaWebMovie> movies, string sessionPath)
     {

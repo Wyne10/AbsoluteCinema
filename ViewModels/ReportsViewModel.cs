@@ -108,7 +108,7 @@ public partial class ReportsViewModel(IServiceProvider serviceProvider, ILogger<
             pathToOpen = Directory.Exists(sessionPath) ? sessionPath : Path.GetDirectoryName(sessionPath);
         }
 
-        pathToOpen ??= Path.Combine(Path.GetTempPath(), IReportService.ReportsRootPath);
+        pathToOpen ??= Path.GetTempPath();
         return pathToOpen;
     }
 }

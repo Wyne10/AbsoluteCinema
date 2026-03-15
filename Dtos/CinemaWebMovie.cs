@@ -11,7 +11,8 @@ public record CinemaWebMovie(
     string CertificateNumber,
     List<string> Formats,
     DateOnly? DistributionBegin,
-    DateOnly? DistributionEnd)
+    DateOnly? DistributionEnd,
+    bool IsPushkin)
 {
     public CinemaWebMovieDetails? Details { get; init; }
 }

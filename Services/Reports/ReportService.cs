@@ -2,16 +2,18 @@
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using AbsoluteCinema.Configuration;
+using Microsoft.Extensions.Options;
 
 namespace AbsoluteCinema.Services.Reports;
 
-public abstract class ReportService : IReportService
+public abstract class ReportService(IOptionsMonitor<DocumentRootConfiguration> rootConfiguration) : IReportService
 {
     public event Action? OnDownloadProgress;
 
     public string GetSessionPath(DateTime startDate, DateTime endDate)
     {
-        var reportsRootPath = Path.Combine(Path.GetTempPath(), IReportService.ReportsRootPath);
+        var reportsRootPath = rootConfiguration.Get("ReportRootPath").RootPath;
         var sessionPath = Path.Combine(reportsRootPath, $"Отчет {startDate:yyyy-MM-dd} - {endDate:yyyy-MM-dd}");
         return sessionPath;
     }

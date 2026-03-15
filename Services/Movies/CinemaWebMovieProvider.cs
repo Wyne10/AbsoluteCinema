@@ -90,8 +90,9 @@ public partial class CinemaWebMovieProvider(ILogger logger, string baseUrl = "ht
                 var certificateNumber = StripTags(cells[7].Groups[1].Value);
                 var format = StripTags(cells[8].Groups[1].Value);
                 var formats = string.IsNullOrWhiteSpace(format) ? [] : format.Split(',', StringSplitOptions.TrimEntries).ToList();
+                var isPushkin = PushkinImageRegex().IsMatch(row.Value);
 
-                movies.TryAdd(name, new CinemaWebMovie(id, name, duration, ageRestriction, certificateNumber, formats, distributionBegin, distributionEnd));
+                movies.TryAdd(name, new CinemaWebMovie(id, name, duration, ageRestriction, certificateNumber, formats, distributionBegin, distributionEnd, isPushkin));
             }
         }
 
@@ -185,4 +186,7 @@ public partial class CinemaWebMovieProvider(ILogger logger, string baseUrl = "ht
 
     [GeneratedRegex("<[^>]+>")]
     private static partial Regex TagRegex();
+
+    [GeneratedRegex(@"<img[^>]*pushkin\.png", RegexOptions.IgnoreCase)]
+    private static partial Regex PushkinImageRegex();
 }

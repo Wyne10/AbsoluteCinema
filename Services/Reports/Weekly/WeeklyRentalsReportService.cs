@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using AbsoluteCinema.Configuration;
 using AbsoluteCinema.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace AbsoluteCinema.Services.Reports.Weekly;
 
-public class WeeklyRentalsReportService(ILogger<ReportService> logger) : ReportService
+public class WeeklyRentalsReportService(ILogger<ReportService> logger, IOptionsMonitor<DocumentRootConfiguration> rootConfiguration) : ReportService(rootConfiguration)
 {
     private const string ReportPath = "CashReports/CashTotalToday";
     private const string ShowRentalsSelector = "ReportViewer1$ctl04$ctl07$ddValue";

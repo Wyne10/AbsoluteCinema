@@ -1,15 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using AbsoluteCinema.Configuration;
+using Microsoft.Extensions.Options;
 
 namespace AbsoluteCinema.Services.Reports;
 
 public class CompositeReportService : ReportService
 {
     private readonly IEnumerable<IReportService> _reportServices;
-    
-    public CompositeReportService(IEnumerable<IReportService> reportServices)
+
+    protected CompositeReportService(IOptionsMonitor<DocumentRootConfiguration> rootConfiguration, IEnumerable<IReportService> reportServices) : base(rootConfiguration)
     {
         _reportServices = reportServices;
         foreach (var reportService in _reportServices) reportService.OnDownloadProgress += ProgressDownload;

@@ -30,9 +30,11 @@ public static class Hosting
         {
             return builder.Services
                 .Configure<MovieProviderConfiguration>(builder.Configuration.GetSection("Movie"))
-                .Configure<ReportConfiguration>("MonthlyReport", builder.Configuration.GetSection("Report:Monthly"))
-                .Configure<ReportConfiguration>("QuarterlyReport", builder.Configuration.GetSection("Report:Quarterly"))
-                .Configure<ScheduleConfiguration>("Repertoire", builder.Configuration.GetSection("Schedule:Repertoire"));
+                .Configure<DocumentRootConfiguration>("ReportRootPath", builder.Configuration.GetSection("Report:Root"))
+                .Configure<DocumentRootConfiguration>("ScheduleRootPath", builder.Configuration.GetSection("Schedule:Root"))
+                .Configure<DocumentTemplateConfiguration>("MonthlyReport", builder.Configuration.GetSection("Report:Monthly"))
+                .Configure<DocumentTemplateConfiguration>("QuarterlyReport", builder.Configuration.GetSection("Report:Quarterly"))
+                .Configure<DocumentTemplateConfiguration>("Repertoire", builder.Configuration.GetSection("Schedule:Repertoire"));
         }
         
         public ILoggingBuilder ConfigureLogger()
@@ -59,7 +61,9 @@ public static class Hosting
                 .AddKeyedTransient<IReportService, MonthlyReportService>("monthly")
                 .AddKeyedTransient<IReportService, QuarterlyReportService>("quarterly")
                 // Schedule
-                .AddTransient<IScheduleService, RepertoireService>()
+                .AddTransient<RepertoireService>()
+                .AddTransient<ScheduleSessionService>()
+                .AddTransient<IScheduleService, CompleteScheduleService>()
                 // View models
                 .AddTransient<MainWindowViewModel>()
                 .AddSingleton<ReportsViewModel>()

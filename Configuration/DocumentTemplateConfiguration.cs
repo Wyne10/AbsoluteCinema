@@ -1,7 +1,6 @@
 namespace AbsoluteCinema.Configuration;
 
-public sealed class ScheduleConfiguration
+public sealed record DocumentTemplateConfiguration
 {
-    public required string RootPath { get; set; }
     public required string TemplatePath { get; set; }
 }

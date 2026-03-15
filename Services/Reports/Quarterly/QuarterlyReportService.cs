@@ -14,11 +14,15 @@ using Microsoft.Extensions.Options;
 
 namespace AbsoluteCinema.Services.Reports.Quarterly;
 
-public class QuarterlyReportService(ILogger<ReportService> logger, IOptionsMonitor<ReportConfiguration> configurationMonitor) : ReportService
+public class QuarterlyReportService(
+    ILogger<ReportService> logger,
+    IOptionsMonitor<DocumentRootConfiguration> rootConfiguration,
+    IOptionsMonitor<DocumentTemplateConfiguration> templateConfiguration
+    ) : ReportService(rootConfiguration)
 {
     private const string ReportPath = "RentalReports/GrossMovieByPeriod";
     
-    private ReportConfiguration Configuration => configurationMonitor.Get("QuarterlyReport");
+    private DocumentTemplateConfiguration Configuration => templateConfiguration.Get("QuarterlyReport");
     
     public override async Task<string> GenerateReportFiles(DateTime from, DateTime to, ReportProvider reportProvider, CancellationToken cancellationToken = default)
     {

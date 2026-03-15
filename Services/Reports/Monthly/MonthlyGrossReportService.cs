@@ -17,12 +17,17 @@ using Xceed.Words.NET;
 
 namespace AbsoluteCinema.Services.Reports.Monthly;
 
-public class MonthlyGrossReportService(ILogger<ReportService> logger, IOptionsMonitor<ReportConfiguration> configurationMonitor, IMovieProvider movieProvider) : ReportService
+public class MonthlyGrossReportService(
+    ILogger<ReportService> logger,
+    IOptionsMonitor<DocumentRootConfiguration> rootConfiguration,
+    IOptionsMonitor<DocumentTemplateConfiguration> templateConfiguration,
+    IMovieProvider movieProvider
+    ) : ReportService(rootConfiguration)
 {
     private const string ReportPath = "RentalReports/GrossMovieByPeriod";
     private const string CardReportPath = "RentalReports/MovieByPeriodPushkin";
 
-    private ReportConfiguration Configuration => configurationMonitor.Get("MonthlyReport");
+    private DocumentTemplateConfiguration Configuration => templateConfiguration.Get("MonthlyReport");
 
     public override async Task<string> GenerateReportFiles(DateTime from, DateTime to, ReportProvider reportProvider, CancellationToken cancellationToken = default)
     {
