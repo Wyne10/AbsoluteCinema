@@ -52,13 +52,23 @@
                     CornerRadius="8"
                     Padding="20">
                 <DockPanel>
-                    <TextBlock DockPanel.Dock="Top"
-                               Text="Готовые трейлеры"
-                               FontSize="16"
-                               FontWeight="SemiBold"
-                               Margin="0,0,0,12"/>
+                    <DockPanel DockPanel.Dock="Top" Margin="0,0,0,12">
+                        <Button DockPanel.Dock="Right"
+                                Command="{Binding OpenTrailersFolderCommand}"
+                                Background="Transparent"
+                                Padding="4"
+                                ToolTip.Tip="Открыть папку">
+                            <PathIcon Data="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"
+                                      Width="16" Height="16"/>
+                        </Button>
+                        <TextBlock Text="Готовые трейлеры"
+                                   FontSize="16"
+                                   FontWeight="SemiBold"/>
+                    </DockPanel>
 
-                    <ListBox ItemsSource="{Binding RenderedTrailers}"
+                    <ListBox Name="RenderedTrailersListBox"
+                             ItemsSource="{Binding RenderedTrailers}"
+                             SelectedItem="{Binding SelectedRenderedTrailer}"
                              SelectionMode="Single">
                         <ListBox.ItemTemplate>
                             <DataTemplate x:DataType="models:RenderedTrailer">

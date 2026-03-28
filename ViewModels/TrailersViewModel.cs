@@ -8,6 +8,9 @@ using AbsoluteCinema.Dtos;
 using AbsoluteCinema.Models;
 using AbsoluteCinema.Services.Movies;
 using AbsoluteCinema.Services.Trailers;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Hosting;
@@ -18,12 +21,13 @@ using MsBox.Avalonia.Enums;
 
 namespace AbsoluteCinema.ViewModels;
 
-public partial class TrailersViewModel(
-    IOptionsMonitor<TrailerConfiguration> configuration,
-    IMovieProvider<KinoplanRelease> kinoplanProvider,
-    ILogger<TrailersViewModel> logger,
-    IHostApplicationLifetime lifetime) : ViewModelBase
+public partial class TrailersViewModel : ViewModelBase
 {
+    private readonly IOptionsMonitor<TrailerConfiguration> _configuration;
+    private readonly IMovieProvider<KinoplanRelease> _kinoplanProvider;
+    private readonly ILogger<TrailersViewModel> _logger;
+    private readonly IHostApplicationLifetime _lifetime;
+
     public ObservableCollection<TrailerMovie> Movies { get; } = [];
     public ObservableCollection<RenderedTrailer> RenderedTrailers { get; } = [];
 
@@ -39,7 +43,20 @@ public partial class TrailersViewModel(
     [ObservableProperty]
     private string? _lastOutputPath;
 
-    private TrailerConfiguration Configuration => configuration.CurrentValue;
+    private TrailerConfiguration Configuration => _configuration.CurrentValue;
+
+    public TrailersViewModel(
+        IOptionsMonitor<TrailerConfiguration> configuration,
+        IMovieProvider<KinoplanRelease> kinoplanProvider,
+        ILogger<TrailersViewModel> logger,
+        IHostApplicationLifetime lifetime)
+    {
+        _configuration = configuration;
+        _kinoplanProvider = kinoplanProvider;
+        _logger = logger;
+        _lifetime = lifetime;
+        RefreshRenderedTrailers();
+    }
 
     [RelayCommand(CanExecute = nameof(CanLoadMovies))]
     private async Task LoadMovies()
@@ -49,11 +66,11 @@ public partial class TrailersViewModel(
             IsLoading = true;
             Movies.Clear();
 
-            using var cinemaWeb = new CinemaWebMovieProvider(logger);
-            var activeMovies = await cinemaWeb.GetActiveMoviesAsync(lifetime.ApplicationStopping);
+            using var cinemaWeb = new CinemaWebMovieProvider(_logger);
+            var activeMovies = await cinemaWeb.GetActiveMoviesAsync(_lifetime.ApplicationStopping);
             var movieNames = activeMovies.Select(m => m.Name).ToList();
 
-            var kinoplanMovies = await kinoplanProvider.GetMovies(movieNames, lifetime.ApplicationStopping);
+            var kinoplanMovies = await _kinoplanProvider.GetMovies(movieNames, _lifetime.ApplicationStopping);
 
             foreach (var cwMovie in activeMovies)
             {
@@ -72,11 +89,11 @@ public partial class TrailersViewModel(
                 Movies.Add(movie);
             }
 
-            logger.LogInformation("Loaded {Count} movies with trailer files", Movies.Count);
+            _logger.LogInformation("Loaded {Count} movies with trailer files", Movies.Count);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to load movies");
+            _logger.LogError(ex, "Failed to load movies");
             var box = MessageBoxManager
                 .GetMessageBoxStandard("Ошибка", $"Не удалось загрузить фильмы: {ex.Message}", ButtonEnum.Ok, Icon.Error);
             await box.ShowAsync();
@@ -101,8 +118,8 @@ public partial class TrailersViewModel(
                 .Select(m => m.SelectedVideoFile!)
                 .ToList();
 
-            using var trailerService = new TrailerService(Configuration.RootPath, Configuration.FfmpegPath, logger);
-            var outputPath = await trailerService.RenderTrailers(selectedFiles, lifetime.ApplicationStopping);
+            using var trailerService = new TrailerService(Configuration.RootPath, Configuration.FfmpegPath, _logger);
+            var outputPath = await trailerService.RenderTrailers(selectedFiles, _lifetime.ApplicationStopping);
             LastOutputPath = outputPath;
             RefreshRenderedTrailers();
 
@@ -112,7 +129,7 @@ public partial class TrailersViewModel(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to render trailers");
+            _logger.LogError(ex, "Failed to render trailers");
             var box = MessageBoxManager
                 .GetMessageBoxStandard("Ошибка", $"Не удалось объединить трейлеры: {ex.Message}", ButtonEnum.Ok, Icon.Error);
             await box.ShowAsync();
@@ -142,5 +159,27 @@ public partial class TrailersViewModel(
             var info = new FileInfo(file);
             RenderedTrailers.Add(new RenderedTrailer(info.Name, file, info.Length, info.CreationTime));
         }
+    }
+
+    [RelayCommand]
+    private void OpenTrailersFolder()
+    {
+        var path = Configuration.RootPath;
+        if (string.IsNullOrWhiteSpace(path)) return;
+
+        if (!Directory.Exists(path))
+            Directory.CreateDirectory(path);
+
+        if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime { MainWindow: not null } desktop)
+            desktop.MainWindow.Launcher.LaunchUriAsync(new Uri(path));
+    }
+
+    [ObservableProperty]
+    private RenderedTrailer? _selectedRenderedTrailer;
+
+    public void OpenSelectedTrailer(Visual visual)
+    {
+        if (SelectedRenderedTrailer is null) return;
+        TopLevel.GetTopLevel(visual)?.Launcher.LaunchUriAsync(new Uri(SelectedRenderedTrailer.FullPath));
     }
 }
