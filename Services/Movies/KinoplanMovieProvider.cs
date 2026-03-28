@@ -31,7 +31,7 @@ public class KinoplanMovieProvider : IMovieProvider<KinoplanRelease>
         _configurationMonitor = configurationMonitor;
         _logger = logger;
         var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-        var appFolderPath = Path.Combine(appDataPath, "CinemaControl");
+        var appFolderPath = Path.Combine(appDataPath, "AbsoluteCinema");
         Directory.CreateDirectory(appFolderPath);
         _movieCacheFilePath = Path.Combine(appFolderPath, "kinoplan_movies.json");
 
@@ -100,6 +100,15 @@ public class KinoplanMovieProvider : IMovieProvider<KinoplanRelease>
         if (list.GetArrayLength() == 0)
             return null;
 
+        foreach (var item in list.EnumerateArray())
+        {
+            var title = item.GetProperty("title");
+            var ruTitle = title.TryGetProperty("ru", out var ruProp) ? ruProp.GetString() : null;
+            if (string.Equals(ruTitle, movieName, StringComparison.OrdinalIgnoreCase))
+                return item.GetProperty("id").GetInt32();
+        }
+
+        _logger.LogWarning("No title match in Kinoplan for {MovieName}, using first result", movieName);
         return list[0].GetProperty("id").GetInt32();
     }
 

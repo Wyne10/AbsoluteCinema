@@ -35,7 +35,8 @@ public static class Hosting
                 .Configure<DocumentRootConfiguration>("ScheduleRootPath", builder.Configuration.GetSection("Schedule:Root"))
                 .Configure<DocumentTemplateConfiguration>("MonthlyReport", builder.Configuration.GetSection("Report:Monthly"))
                 .Configure<DocumentTemplateConfiguration>("QuarterlyReport", builder.Configuration.GetSection("Report:Quarterly"))
-                .Configure<DocumentTemplateConfiguration>("Repertoire", builder.Configuration.GetSection("Schedule:Repertoire"));
+                .Configure<DocumentTemplateConfiguration>("Repertoire", builder.Configuration.GetSection("Schedule:Repertoire"))
+                .Configure<TrailerConfiguration>(builder.Configuration.GetSection("Trailer"));
         }
         
         public ILoggingBuilder ConfigureLogger()
@@ -69,6 +70,7 @@ public static class Hosting
                 .AddTransient<MainWindowViewModel>()
                 .AddSingleton<ReportsViewModel>()
                 .AddSingleton<ScheduleViewModel>()
+                .AddSingleton<TrailersViewModel>()
                 .AddTransient<SettingsViewModel>()
                 // Singletons
                 .AddSingleton<IMovieProvider<Dtos.Movie>, PoiskinoMovieProvider>()

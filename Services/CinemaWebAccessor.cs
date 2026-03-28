@@ -12,7 +12,7 @@ namespace AbsoluteCinema.Services;
 public abstract partial class CinemaWebAccessor : IDisposable
 {
     protected HttpClient HttpClient { get; }
-    protected string BaseUrl { get; }
+    private string BaseUrl { get; }
     protected bool IsAuthenticated { get; set; }
     
     protected CinemaWebAccessor(string baseUrl = "http://192.168.3.150")
@@ -30,8 +30,8 @@ public abstract partial class CinemaWebAccessor : IDisposable
             Timeout = TimeSpan.FromSeconds(30)
         };
     }
-    
-    protected async Task<bool> LoginAsync(string username = "Администратор", string password = "", CancellationToken cancellationToken = default)
+
+    private async Task<bool> LoginAsync(string username = "Администратор", string password = "", CancellationToken cancellationToken = default)
     {
         var loginPage = await HttpClient.GetStringAsync("/CinemaWeb/Account/Login", cancellationToken);
 

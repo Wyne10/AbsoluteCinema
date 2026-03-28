@@ -23,6 +23,8 @@ public partial class SettingsViewModel(ILogger<SettingsViewModel> logger) : View
         ["Report:Root:RootPath"] = "Папка отчётов",
         ["Report:Monthly:TemplatePath"] = "Шаблон ежемесячного отчёта",
         ["Report:Quarterly:TemplatePath"] = "Шаблон ежеквартального отчёта",
+        ["Trailer:RootPath"] = "Папка трейлеров",
+        ["Trailer:FfmpegPath"] = "Путь к ffmpeg",
         ["Schedule:Root:RootPath"] = "Папка расписаний",
         ["Schedule:Repertoire:TemplatePath"] = "Шаблон репертуара",
     };
@@ -31,6 +33,7 @@ public partial class SettingsViewModel(ILogger<SettingsViewModel> logger) : View
     {
         ["Movie"] = "Фильмы",
         ["Report"] = "Отчёты",
+        ["Trailer"] = "Трейлеры",
         ["Schedule"] = "Расписание",
     };
 

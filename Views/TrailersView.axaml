@@ -1,0 +1,135 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:AbsoluteCinema.ViewModels"
+             xmlns:models="using:AbsoluteCinema.Models"
+             xmlns:dtos="using:AbsoluteCinema.Dtos"
+             xmlns:asyncImageLoader="using:AsyncImageLoader"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="600"
+             x:Class="AbsoluteCinema.Views.TrailersView"
+             x:DataType="vm:TrailersViewModel">
+
+    <Grid Margin="24" ColumnDefinitions="*,16,3*" RowDefinitions="Auto,*">
+
+        <!-- Header -->
+        <StackPanel Grid.Column="0" Grid.ColumnSpan="3" Margin="0,0,0,24">
+            <TextBlock Text="Трейлеры"
+                       FontSize="28"
+                       FontWeight="SemiBold"/>
+            <TextBlock Text="Выберите трейлер для каждого фильма и объедините в один файл"
+                       Opacity="0.7"
+                       Margin="0,4,0,0"/>
+        </StackPanel>
+
+        <!-- Left panel -->
+        <Grid Grid.Row="1" Grid.Column="0" RowDefinitions="Auto,Auto,*">
+
+            <!-- Buttons -->
+            <StackPanel Grid.Row="0" Spacing="8" Margin="0,0,0,16">
+                <Button Command="{Binding LoadMoviesCommand}"
+                        Content="Загрузить фильмы"
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Center"
+                        Padding="16,12"
+                        Theme="{DynamicResource SolidButton}"/>
+                <Button Command="{Binding RenderTrailersCommand}"
+                        Content="Объединить трейлеры"
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Center"
+                        Padding="16,12"/>
+                <ProgressBar IsIndeterminate="True"
+                             IsVisible="{Binding IsLoading}"
+                             Height="4"/>
+                <ProgressBar IsIndeterminate="True"
+                             IsVisible="{Binding IsRendering}"
+                             Height="4"/>
+            </StackPanel>
+
+            <!-- Rendered files -->
+            <Border Grid.Row="2"
+                    Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
+                    CornerRadius="8"
+                    Padding="20">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top"
+                               Text="Готовые трейлеры"
+                               FontSize="16"
+                               FontWeight="SemiBold"
+                               Margin="0,0,0,12"/>
+
+                    <ListBox ItemsSource="{Binding RenderedTrailers}"
+                             SelectionMode="Single">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="models:RenderedTrailer">
+                                <StackPanel Spacing="2">
+                                    <TextBlock Text="{Binding Name}"
+                                               TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Opacity="0.6" FontSize="11">
+                                        <Run Text="{Binding CreatedAtFormatted}"/>
+                                        <Run Text=" · "/>
+                                        <Run Text="{Binding SizeFormatted}"/>
+                                    </TextBlock>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </DockPanel>
+            </Border>
+        </Grid>
+
+        <GridSplitter Grid.Row="1" Grid.Column="1" ResizeDirection="Columns"/>
+
+        <!-- Right panel: movie trailer selection -->
+        <ScrollViewer Grid.Row="1" Grid.Column="2">
+            <ItemsControl ItemsSource="{Binding Movies}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="models:TrailerMovie">
+                        <Border Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
+                                CornerRadius="8"
+                                Padding="12"
+                                Margin="0,0,0,8">
+                            <Grid ColumnDefinitions="Auto,*">
+                                <!-- Cover image -->
+                                <Border Grid.Column="0"
+                                        Width="80" Height="114"
+                                        CornerRadius="4"
+                                        ClipToBounds="True"
+                                        Margin="0,0,12,0">
+                                    <Panel>
+                                        <Image asyncImageLoader:ImageLoader.Source="{Binding CoverUrl}"
+                                               Stretch="UniformToFill"/>
+                                        <Border Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+                                                IsVisible="{Binding CoverUrl, Converter={x:Static StringConverters.IsNullOrEmpty}}">
+                                            <PathIcon Data="M18 4v1h-2V4c0-.55-.45-1-1-1H9c-.55 0-1 .45-1 1v1H6V4c0-.55-.45-1-1-1s-1 .45-1 1v16c0 .55.45 1 1 1s1-.45 1-1v-1h2v1c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-1h2v1c0 .55.45 1 1 1s1-.45 1-1V4c0-.55-.45-1-1-1s-1 .45-1 1z"
+                                                       Width="24" Height="24"
+                                                       Opacity="0.3"/>
+                                        </Border>
+                                    </Panel>
+                                </Border>
+
+                                <!-- Movie info -->
+                                <StackPanel Grid.Column="1" Spacing="6" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Name}"
+                                               FontSize="14"
+                                               FontWeight="SemiBold"
+                                               TextWrapping="Wrap"/>
+                                    <ComboBox ItemsSource="{Binding VideoFiles}"
+                                              SelectedItem="{Binding SelectedVideoFile}"
+                                              PlaceholderText="Выберите файл"
+                                              HorizontalAlignment="Stretch">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate x:DataType="dtos:KinoplanFile">
+                                                <TextBlock Text="{Binding Title}"/>
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

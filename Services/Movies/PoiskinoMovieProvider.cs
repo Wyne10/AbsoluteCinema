@@ -32,7 +32,7 @@ public class PoiskinoMovieProvider : IMovieProvider<Movie>
         _configurationMonitor = configurationMonitor;
         _logger = logger;
         var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-        var appFolderPath = Path.Combine(appDataPath, "CinemaControl");
+        var appFolderPath = Path.Combine(appDataPath, "AbsoluteCinema");
         Directory.CreateDirectory(appFolderPath);
         _movieCacheFilePath = Path.Combine(appFolderPath, "poiskkino_movies.json");
 

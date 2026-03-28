@@ -7,9 +7,10 @@ namespace AbsoluteCinema.ViewModels;
 public partial class MainWindowViewModel(
     ReportsViewModel reportsViewModel,
     ScheduleViewModel scheduleViewModel,
+    TrailersViewModel trailersViewModel,
     IServiceProvider serviceProvider) : ViewModelBase
 {
-    private readonly ViewModelBase[] _pages = [reportsViewModel, scheduleViewModel];
+    private readonly ViewModelBase[] _pages = [reportsViewModel, scheduleViewModel, trailersViewModel];
 
     [ObservableProperty]
     private ViewModelBase _currentPage = reportsViewModel;
@@ -19,7 +20,7 @@ public partial class MainWindowViewModel(
 
     partial void OnSelectedNavIndexChanged(int value)
     {
-        if (value == 5)
+        if (value == 4)
         {
             var settings = serviceProvider.GetRequiredService<SettingsViewModel>();
             settings.Load();
