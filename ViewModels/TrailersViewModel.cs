@@ -43,6 +43,12 @@ public partial class TrailersViewModel : ViewModelBase
     [ObservableProperty]
     private string? _lastOutputPath;
 
+    [ObservableProperty]
+    private double _downloadProgress;
+
+    [ObservableProperty]
+    private string? _downloadStatusText;
+
     private TrailerConfiguration Configuration => _configuration.CurrentValue;
 
     public TrailersViewModel(
@@ -118,14 +124,20 @@ public partial class TrailersViewModel : ViewModelBase
                 .Select(m => m.SelectedVideoFile!)
                 .ToList();
 
+            DownloadProgress = 0;
+            DownloadStatusText = null;
+
+            var progress = new Progress<TrailerProgress>(p =>
+            {
+                DownloadProgress = p.Fraction * 100;
+                DownloadStatusText = p.StatusText;
+            });
+
             using var trailerService = new TrailerService(Configuration.RootPath, Configuration.FfmpegPath, _logger);
-            var outputPath = await trailerService.RenderTrailers(selectedFiles, _lifetime.ApplicationStopping);
+            var outputPath = await trailerService.RenderTrailers(selectedFiles, progress, _lifetime.ApplicationStopping);
+            DownloadStatusText = null;
             LastOutputPath = outputPath;
             RefreshRenderedTrailers();
-
-            var box = MessageBoxManager
-                .GetMessageBoxStandard("Готово", $"Трейлеры объединены:\n{outputPath}", ButtonEnum.Ok, Icon.Success);
-            await box.ShowAsync();
         }
         catch (Exception ex)
         {

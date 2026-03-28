@@ -15,7 +15,10 @@ public sealed class TrailerService(string rootPath, string ffmpegPath, ILogger l
 {
     private readonly HttpClient _httpClient = new();
 
-    public async Task<string> RenderTrailers(IEnumerable<KinoplanFile> files, CancellationToken cancellationToken = default)
+    public async Task<string> RenderTrailers(
+        IEnumerable<KinoplanFile> files,
+        IProgress<TrailerProgress>? progress = null,
+        CancellationToken cancellationToken = default)
     {
         var fileList = files.ToList();
         if (fileList.Count == 0)
@@ -25,14 +28,35 @@ public sealed class TrailerService(string rootPath, string ffmpegPath, ILogger l
         var downloadDir = Path.Combine(Path.GetTempPath(), "AbsoluteCinema");
         Directory.CreateDirectory(downloadDir);
 
+        var totalBytes = fileList.Sum(f => f.Size);
+        long downloadedBytes = 0;
+        var sw = Stopwatch.StartNew();
+
         var localPaths = new List<string>();
         foreach (var file in fileList)
         {
-            var localPath = await DownloadFile(file, downloadDir, cancellationToken);
+            var localPath = await DownloadFile(file, downloadDir, bytes =>
+            {
+                downloadedBytes += bytes;
+                var fraction = totalBytes > 0 ? (double)downloadedBytes / totalBytes : 0;
+
+                TimeSpan? eta = null;
+                if (fraction > 0.01 && sw.Elapsed.TotalSeconds > 1)
+                {
+                    var remaining = sw.Elapsed.TotalSeconds / fraction * (1 - fraction);
+                    eta = TimeSpan.FromSeconds(remaining);
+                }
+
+                progress?.Report(new TrailerProgress(fraction, downloadedBytes, totalBytes, eta));
+            }, cancellationToken);
+
             if (localPath is null)
                 continue;
+
             localPaths.Add(localPath);
         }
+
+        progress?.Report(new TrailerProgress(1, totalBytes, totalBytes, TimeSpan.Zero));
 
         var timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
         var outputPath = Path.Combine(rootPath, $"trailers_{timestamp}.mp4");
@@ -41,7 +65,10 @@ public sealed class TrailerService(string rootPath, string ffmpegPath, ILogger l
         return outputPath;
     }
 
-    private async Task<string?> DownloadFile(KinoplanFile file, string downloadDir, CancellationToken cancellationToken)
+    private async Task<string?> DownloadFile(
+        KinoplanFile file, string downloadDir,
+        Action<long> onBytesRead,
+        CancellationToken cancellationToken)
     {
         if (file.Path is null)
         {
@@ -57,13 +84,27 @@ public sealed class TrailerService(string rootPath, string ffmpegPath, ILogger l
         if (File.Exists(localPath))
         {
             logger.LogDebug("File already downloaded: {Path}", localPath);
+            onBytesRead(file.Size);
             return localPath;
         }
 
         logger.LogDebug("Downloading {Title} from {Url}...", file.Title, file.Path);
-        await using var stream = await _httpClient.GetStreamAsync(file.Path, cancellationToken);
+
+        using var response = await _httpClient.SendAsync(
+            new HttpRequestMessage(HttpMethod.Get, file.Path),
+            HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+        response.EnsureSuccessStatusCode();
+
+        await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
         await using var fileStream = File.Create(localPath);
-        await stream.CopyToAsync(fileStream, cancellationToken);
+
+        var buffer = new byte[81920];
+        int bytesRead;
+        while ((bytesRead = await stream.ReadAsync(buffer, cancellationToken)) > 0)
+        {
+            await fileStream.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken);
+            onBytesRead(bytesRead);
+        }
 
         logger.LogInformation("Downloaded {Title} to {Path}", file.Title, localPath);
         return localPath;

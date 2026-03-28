@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -7,5 +8,5 @@ namespace AbsoluteCinema.Services.Trailers;
 
 public interface ITrailerService
 {
-    Task<string> RenderTrailers(IEnumerable<KinoplanFile> files, CancellationToken cancellationToken = default);
+    Task<string> RenderTrailers(IEnumerable<KinoplanFile> files, IProgress<TrailerProgress>? progress = null, CancellationToken cancellationToken = default);
 }

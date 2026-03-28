@@ -41,9 +41,14 @@
                 <ProgressBar IsIndeterminate="True"
                              IsVisible="{Binding IsLoading}"
                              Height="4"/>
-                <ProgressBar IsIndeterminate="True"
+                <ProgressBar Value="{Binding DownloadProgress}"
+                             Maximum="100"
                              IsVisible="{Binding IsRendering}"
                              Height="4"/>
+                <TextBlock Text="{Binding DownloadStatusText}"
+                           IsVisible="{Binding IsRendering}"
+                           FontSize="11"
+                           Opacity="0.7"/>
             </StackPanel>
 
             <!-- Rendered files -->
