@@ -21,7 +21,7 @@ public class MonthlyGrossReportService(
     ILogger<ReportService> logger,
     IOptionsMonitor<DocumentRootConfiguration> rootConfiguration,
     IOptionsMonitor<DocumentTemplateConfiguration> templateConfiguration,
-    IMovieProvider movieProvider
+    IMovieProvider<Movie> movieProvider
     ) : ReportService(rootConfiguration)
 {
     private const string ReportPath = "RentalReports/GrossMovieByPeriod";

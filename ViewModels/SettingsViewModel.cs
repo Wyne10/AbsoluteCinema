@@ -18,7 +18,8 @@ public partial class SettingsViewModel(ILogger<SettingsViewModel> logger) : View
 
     private static readonly Dictionary<string, string> DisplayNames = new()
     {
-        ["Movie:ApiToken"] = "API-токен Poiskkino",
+        ["Movie:Poiskkino:ApiToken"] = "API-токен Poiskkino",
+        ["Movie:Kinoplan:ApiToken"] = "API-токен Kinoplan",
         ["Report:Root:RootPath"] = "Папка отчётов",
         ["Report:Monthly:TemplatePath"] = "Шаблон ежемесячного отчёта",
         ["Report:Quarterly:TemplatePath"] = "Шаблон ежеквартального отчёта",

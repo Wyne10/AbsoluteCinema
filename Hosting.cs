@@ -29,7 +29,8 @@ public static class Hosting
         public IServiceCollection ConfigureServices()
         {
             return builder.Services
-                .Configure<MovieProviderConfiguration>(builder.Configuration.GetSection("Movie"))
+                .Configure<MovieProviderConfiguration>("Poiskkino", builder.Configuration.GetSection("Movie:Poiskkino"))
+                .Configure<MovieProviderConfiguration>("Kinoplan", builder.Configuration.GetSection("Movie:Kinoplan"))
                 .Configure<DocumentRootConfiguration>("ReportRootPath", builder.Configuration.GetSection("Report:Root"))
                 .Configure<DocumentRootConfiguration>("ScheduleRootPath", builder.Configuration.GetSection("Schedule:Root"))
                 .Configure<DocumentTemplateConfiguration>("MonthlyReport", builder.Configuration.GetSection("Report:Monthly"))
@@ -70,7 +71,8 @@ public static class Hosting
                 .AddSingleton<ScheduleViewModel>()
                 .AddTransient<SettingsViewModel>()
                 // Singletons
-                .AddSingleton<IMovieProvider, MovieProvider>();
+                .AddSingleton<IMovieProvider<Dtos.Movie>, PoiskinoMovieProvider>()
+                .AddSingleton<IMovieProvider<Dtos.KinoplanRelease>, KinoplanMovieProvider>();
         }
     }
 }
