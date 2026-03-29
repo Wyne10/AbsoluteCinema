@@ -148,8 +148,47 @@ public sealed class TrailerService(string rootPath, string ffmpegPath, ILogger l
         }
     }
     
+    public async Task<string> OverlayImage(string videoPath, string imagePath, CancellationToken cancellationToken = default)
+    {
+        if (!File.Exists(videoPath))
+            throw new FileNotFoundException("Video file not found", videoPath);
+        if (!File.Exists(imagePath))
+            throw new FileNotFoundException("Image file not found", imagePath);
+
+        var outputPath = Path.Combine(
+            Path.GetDirectoryName(videoPath)!,
+            Path.GetFileNameWithoutExtension(videoPath) + "_overlay" + Path.GetExtension(videoPath));
+
+        var args = $"-i \"{videoPath}\" -i \"{imagePath}\" " +
+                   $"-filter_complex \"[1:v]scale=iw/6:-1[qr];[0:v][qr]overlay=W-w-20:H-h-20\" " +
+                   $"-codec:a copy \"{outputPath}\"";
+
+        logger.LogInformation("Running ffmpeg overlay: {Path} {Args}", ffmpegPath, args);
+
+        using var process = new Process();
+        process.StartInfo = new ProcessStartInfo
+        {
+            FileName = ffmpegPath,
+            Arguments = args,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+        };
+
+        process.Start();
+        var stderr = await process.StandardError.ReadToEndAsync(cancellationToken);
+        await process.WaitForExitAsync(cancellationToken);
+
+        if (process.ExitCode != 0)
+            throw new InvalidOperationException($"ffmpeg overlay failed with exit code {process.ExitCode}: {stderr}");
+
+        logger.LogInformation("Overlayed image onto {Path}", videoPath);
+        return videoPath;
+    }
+
     public void Dispose()
     {
-        _httpClient.Dispose(); 
+        _httpClient.Dispose();
     }
 }

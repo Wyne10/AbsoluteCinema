@@ -135,6 +135,9 @@ public partial class TrailersViewModel : ViewModelBase
 
             using var trailerService = new TrailerService(Configuration.RootPath, Configuration.FfmpegPath, _logger);
             var outputPath = await trailerService.RenderTrailers(selectedFiles, progress, _lifetime.ApplicationStopping);
+            var templateDir = Path.Combine(AppContext.BaseDirectory, "Templates");
+            var qrPath = Path.Combine(templateDir, "QRCode.png");
+            outputPath = await trailerService.OverlayImage(outputPath, qrPath, _lifetime.ApplicationStopping);
             DownloadStatusText = null;
             LastOutputPath = outputPath;
             RefreshRenderedTrailers();

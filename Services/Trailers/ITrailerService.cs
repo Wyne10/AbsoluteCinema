@@ -9,4 +9,5 @@ namespace AbsoluteCinema.Services.Trailers;
 public interface ITrailerService
 {
     Task<string> RenderTrailers(IEnumerable<KinoplanFile> files, IProgress<TrailerProgress>? progress = null, CancellationToken cancellationToken = default);
+    Task<string> OverlayImage(string videoPath, string imagePath, CancellationToken cancellationToken = default);
 }
