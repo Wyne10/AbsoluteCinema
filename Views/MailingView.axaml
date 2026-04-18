@@ -1,0 +1,190 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:AbsoluteCinema.ViewModels"
+             xmlns:models="using:AbsoluteCinema.Models"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="600"
+             x:Class="AbsoluteCinema.Views.MailingView"
+             x:DataType="vm:MailingViewModel">
+
+    <Grid Margin="24" RowDefinitions="Auto,*,Auto">
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,24">
+            <TextBlock Text="Рассылка"
+                       FontSize="28"
+                       FontWeight="SemiBold"/>
+            <TextBlock Text="Управление контактами и правилами рассылки"
+                       Opacity="0.7"
+                       Margin="0,4,0,0"/>
+        </StackPanel>
+
+        <!-- Two-panel layout -->
+        <Grid Grid.Row="1" ColumnDefinitions="*,16,*">
+
+            <!-- Left: Contacts -->
+            <Border Grid.Column="0"
+                    Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
+                    CornerRadius="8"
+                    Padding="20">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top"
+                               Text="Контакты"
+                               FontSize="16"
+                               FontWeight="SemiBold"
+                               Margin="0,0,0,12"/>
+
+                    <!-- Contact list -->
+                    <DataGrid DockPanel.Dock="Top"
+                              ItemsSource="{Binding Contacts}"
+                              SelectedItem="{Binding SelectedContact}"
+                              AutoGenerateColumns="False"
+                              CanUserReorderColumns="False"
+                              CanUserSortColumns="False"
+                              IsReadOnly="True"
+                              SelectionMode="Single"
+                              Height="200"
+                              Margin="0,0,0,12">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Имя" Binding="{Binding Name}" Width="*"/>
+                            <DataGridTextColumn Header="Email" Binding="{Binding Email}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <!-- Add contact form -->
+                    <StackPanel DockPanel.Dock="Bottom" Spacing="8">
+                        <TextBox Text="{Binding NewContactName}"
+                                 Watermark="Имя"/>
+                        <TextBox Text="{Binding NewContactEmail}"
+                                 Watermark="Email"/>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button Command="{Binding AddContactCommand}"
+                                    Content="Добавить"
+                                    Padding="16,8"/>
+                            <Button Command="{Binding RemoveContactCommand}"
+                                    Content="Удалить"
+                                    Padding="16,8"/>
+                        </StackPanel>
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+
+            <GridSplitter Grid.Column="1" ResizeDirection="Columns"/>
+
+            <!-- Right: Rules -->
+            <Border Grid.Column="2"
+                    Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
+                    CornerRadius="8"
+                    Padding="20">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top"
+                               Text="Правила рассылки"
+                               FontSize="16"
+                               FontWeight="SemiBold"
+                               Margin="0,0,0,12"/>
+
+                    <!-- Rule list -->
+                    <DataGrid DockPanel.Dock="Top"
+                              ItemsSource="{Binding Rules}"
+                              SelectedItem="{Binding SelectedRule}"
+                              AutoGenerateColumns="False"
+                              CanUserReorderColumns="False"
+                              CanUserSortColumns="False"
+                              IsReadOnly="True"
+                              SelectionMode="Single"
+                              Height="140"
+                              Margin="0,0,0,12">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Сервис" Binding="{Binding ServiceKey}" Width="*"/>
+                            <DataGridTextColumn Header="Частота" Binding="{Binding Frequency}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <!-- Rule editor -->
+                    <ScrollViewer DockPanel.Dock="Top">
+                        <StackPanel Spacing="8"
+                                    IsVisible="{Binding SelectedRule, Converter={x:Static ObjectConverters.IsNotNull}}">
+                            <TextBlock Text="Тип:" FontWeight="SemiBold" Margin="0,4,0,0"/>
+                            <ComboBox ItemsSource="{Binding AvailableServices}"
+                                      SelectedItem="{Binding SelectedService}"
+                                      HorizontalAlignment="Stretch">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate x:DataType="models:MailableService">
+                                        <TextBlock Text="{Binding DisplayName}"/>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+
+                            <TextBlock Text="Частота:" FontWeight="SemiBold"/>
+                            <ComboBox ItemsSource="{Binding AvailableFrequencies}"
+                                      SelectedItem="{Binding SelectedFrequency}"
+                                      HorizontalAlignment="Stretch"/>
+
+                            <TextBlock Text="Тема письма:" FontWeight="SemiBold"/>
+                            <TextBox Text="{Binding SelectedRule.Subject}"
+                                     Watermark="Тема"/>
+
+                            <TextBlock Text="Контакты:" FontWeight="SemiBold"/>
+                            <ItemsControl ItemsSource="{Binding RuleContacts}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:SelectableContact">
+                                        <CheckBox IsChecked="{Binding IsSelected}"
+                                                  Margin="0,2">
+                                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                                <TextBlock Text="{Binding Contact.Name}"/>
+                                                <TextBlock Text="{Binding Contact.Email, StringFormat='({0})'}"
+                                                           Opacity="0.6"/>
+                                            </StackPanel>
+                                        </CheckBox>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <!-- Rule buttons -->
+                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
+                                <Button Command="{Binding AddRuleCommand}"
+                                        Content="Добавить"
+                                        Padding="16,8"/>
+                                <Button Command="{Binding RemoveRuleCommand}"
+                                        Content="Удалить"
+                                        Padding="16,8"/>
+                                <Button Command="{Binding SendRuleCommand}"
+                                        Content="Отправить"
+                                        Padding="16,8"
+                                        Theme="{DynamicResource SolidButton}"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!-- Add rule when none selected -->
+                    <StackPanel IsVisible="{Binding SelectedRule, Converter={x:Static ObjectConverters.IsNull}}"
+                                Margin="0,8,0,0">
+                        <Button Command="{Binding AddRuleCommand}"
+                                Content="Добавить правило"
+                                Padding="16,8"/>
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+        </Grid>
+
+        <!-- Footer -->
+        <StackPanel Grid.Row="2"
+                    Orientation="Horizontal"
+                    Spacing="12"
+                    Margin="0,16,0,0">
+            <Button Command="{Binding SaveCommand}"
+                    Content="Сохранить"
+                    Padding="24,12"
+                    Theme="{DynamicResource SolidButton}"/>
+            <ProgressBar IsIndeterminate="True"
+                         IsVisible="{Binding IsSending}"
+                         Width="120"
+                         Height="4"
+                         VerticalAlignment="Center"/>
+            <TextBlock Text="{Binding StatusText}"
+                       VerticalAlignment="Center"
+                       Opacity="0.7"/>
+        </StackPanel>
+    </Grid>
+</UserControl>

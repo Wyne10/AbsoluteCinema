@@ -8,9 +8,10 @@ public partial class MainWindowViewModel(
     ReportsViewModel reportsViewModel,
     ScheduleViewModel scheduleViewModel,
     TrailersViewModel trailersViewModel,
+    MailingViewModel mailingViewModel,
     IServiceProvider serviceProvider) : ViewModelBase
 {
-    private readonly ViewModelBase[] _pages = [reportsViewModel, scheduleViewModel, trailersViewModel];
+    private readonly ViewModelBase[] _pages = [reportsViewModel, scheduleViewModel, trailersViewModel, mailingViewModel];
 
     [ObservableProperty]
     private ViewModelBase _currentPage = reportsViewModel;

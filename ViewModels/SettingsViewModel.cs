@@ -27,6 +27,13 @@ public partial class SettingsViewModel(ILogger<SettingsViewModel> logger) : View
         ["Trailer:FfmpegPath"] = "Путь к ffmpeg",
         ["Schedule:Root:RootPath"] = "Папка расписаний",
         ["Schedule:Repertoire:TemplatePath"] = "Шаблон репертуара",
+        ["Mailing:Smtp:Host"] = "SMTP сервер",
+        ["Mailing:Smtp:Port"] = "SMTP порт",
+        ["Mailing:Smtp:Username"] = "SMTP логин",
+        ["Mailing:Smtp:Password"] = "SMTP пароль",
+        ["Mailing:Smtp:FromAddress"] = "Email отправителя",
+        ["Mailing:Smtp:FromName"] = "Имя отправителя",
+        ["Mailing:Smtp:UseSsl"] = "Использовать SSL",
     };
 
     private static readonly Dictionary<string, string> GroupNames = new()
@@ -35,6 +42,7 @@ public partial class SettingsViewModel(ILogger<SettingsViewModel> logger) : View
         ["Report"] = "Отчёты",
         ["Trailer"] = "Трейлеры",
         ["Schedule"] = "Расписание",
+        ["Mailing"] = "Рассылка",
     };
 
     public ObservableCollection<SettingField> Settings { get; } = [];

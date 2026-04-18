@@ -1,4 +1,5 @@
 using AbsoluteCinema.Configuration;
+using AbsoluteCinema.Services.Mailing;
 using AbsoluteCinema.Services.Movies;
 using AbsoluteCinema.Services.Reports;
 using AbsoluteCinema.Services.Reports.Monthly;
@@ -36,7 +37,8 @@ public static class Hosting
                 .Configure<DocumentTemplateConfiguration>("MonthlyReport", builder.Configuration.GetSection("Report:Monthly"))
                 .Configure<DocumentTemplateConfiguration>("QuarterlyReport", builder.Configuration.GetSection("Report:Quarterly"))
                 .Configure<DocumentTemplateConfiguration>("Repertoire", builder.Configuration.GetSection("Schedule:Repertoire"))
-                .Configure<TrailerConfiguration>(builder.Configuration.GetSection("Trailer"));
+                .Configure<TrailerConfiguration>(builder.Configuration.GetSection("Trailer"))
+                .Configure<SmtpConfiguration>(builder.Configuration.GetSection("Mailing:Smtp"));
         }
         
         public ILoggingBuilder ConfigureLogger()
@@ -54,23 +56,28 @@ public static class Hosting
         {
             return builder.Services
                 // Reports
-                .AddTransient<WeeklyCardReportService>()
-                .AddTransient<WeeklyCashierReportService>()
-                .AddTransient<WeeklyRentalsReportService>()
+                .AddKeyedTransient<WeeklyCardReportService>("weeklyCard")
+                .AddKeyedTransient<WeeklyCashierReportService>("weeklyCashier")
+                .AddKeyedTransient<WeeklyRentalsReportService>("weeklyRentals")
                 .AddKeyedTransient<IReportService, WeeklyReportService>("weekly")
-                .AddTransient<MonthlyPaymentReportService>()
-                .AddTransient<MonthlyGrossReportService>()
+                .AddKeyedTransient<MonthlyPaymentReportService>("monthlyPayment")
+                .AddKeyedTransient<MonthlyGrossReportService>("monthlyGross")
                 .AddKeyedTransient<IReportService, MonthlyReportService>("monthly")
                 .AddKeyedTransient<IReportService, QuarterlyReportService>("quarterly")
                 // Schedule
                 .AddTransient<RepertoireService>()
                 .AddTransient<ScheduleSessionService>()
                 .AddTransient<IScheduleService, CompleteScheduleService>()
+                // Mailing
+                .AddSingleton<MailingStorage>()
+                .AddSingleton<IEmailService, SmtpEmailService>()
+                .AddSingleton<MailingSender>()
                 // View models
                 .AddTransient<MainWindowViewModel>()
                 .AddSingleton<ReportsViewModel>()
                 .AddSingleton<ScheduleViewModel>()
                 .AddSingleton<TrailersViewModel>()
+                .AddSingleton<MailingViewModel>()
                 .AddTransient<SettingsViewModel>()
                 // Singletons
                 .AddSingleton<IMovieProvider<Dtos.Movie>, PoiskinoMovieProvider>()
