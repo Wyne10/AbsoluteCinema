@@ -12,7 +12,7 @@ public partial class MailingRule : ObservableObject
     private string _serviceKey = string.Empty;
 
     [ObservableProperty]
-    private MailingFrequency _frequency;
+    private MailingPeriod _period;
 
     [ObservableProperty]
     private string _subject = string.Empty;

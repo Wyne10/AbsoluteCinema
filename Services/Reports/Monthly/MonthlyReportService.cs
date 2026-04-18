@@ -6,6 +6,6 @@ namespace AbsoluteCinema.Services.Reports.Monthly;
 
 public sealed class MonthlyReportService(
     IOptionsMonitor<DocumentRootConfiguration> rootConfiguration,
-    [FromKeyedServices("monthlyPayment")] MonthlyPaymentReportService payment,
-    [FromKeyedServices("monthlyGross")] MonthlyGrossReportService gross)
+    [FromKeyedServices("monthlyPayment")] IReportService payment,
+    [FromKeyedServices("monthlyGross")] IReportService gross)
     : CompositeReportService(rootConfiguration, [payment, gross]);

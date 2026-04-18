@@ -97,7 +97,7 @@
                               Margin="0,0,0,12">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Сервис" Binding="{Binding ServiceKey}" Width="*"/>
-                            <DataGridTextColumn Header="Частота" Binding="{Binding Frequency}" Width="*"/>
+                            <DataGridTextColumn Header="Период" Binding="{Binding Period}" Width="*"/>
                         </DataGrid.Columns>
                     </DataGrid>
 
@@ -116,9 +116,9 @@
                                 </ComboBox.ItemTemplate>
                             </ComboBox>
 
-                            <TextBlock Text="Частота:" FontWeight="SemiBold"/>
-                            <ComboBox ItemsSource="{Binding AvailableFrequencies}"
-                                      SelectedItem="{Binding SelectedFrequency}"
+                            <TextBlock Text="Период:" FontWeight="SemiBold"/>
+                            <ComboBox ItemsSource="{Binding AvailablePeriods}"
+                                      SelectedItem="{Binding SelectedPeriod}"
                                       HorizontalAlignment="Stretch"/>
 
                             <TextBlock Text="Тема письма:" FontWeight="SemiBold"/>

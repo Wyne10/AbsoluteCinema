@@ -58,7 +58,7 @@ public partial class MailingViewModel : ViewModelBase
     private MailableService? _selectedService;
 
     [ObservableProperty]
-    private MailingFrequency _selectedFrequency;
+    private MailingPeriod _selectedPeriod;
 
     // Rule editor
     public ObservableCollection<SelectableContact> RuleContacts { get; } = [];
@@ -77,7 +77,7 @@ public partial class MailingViewModel : ViewModelBase
         new("schedule", "Расписание", MailableServiceCategory.Schedule),
     ];
 
-    public static MailingFrequency[] AvailableFrequencies { get; } = Enum.GetValues<MailingFrequency>();
+    public static MailingPeriod[] AvailablePeriods { get; } = Enum.GetValues<MailingPeriod>();
 
     // State
     [ObservableProperty]
@@ -124,7 +124,7 @@ public partial class MailingViewModel : ViewModelBase
         var rule = new MailingRule
         {
             ServiceKey = AvailableServices[0].Key,
-            Frequency = MailingFrequency.Weekly
+            Period = MailingPeriod.LastWeek
         };
         Rules.Add(rule);
         SelectedRule = rule;
@@ -145,7 +145,7 @@ public partial class MailingViewModel : ViewModelBase
         if (value is not null)
         {
             SelectedService = Array.Find(AvailableServices, s => s.Key == value.ServiceKey);
-            SelectedFrequency = value.Frequency;
+            SelectedPeriod = value.Period;
         }
         RefreshRuleContacts();
     }
@@ -156,10 +156,10 @@ public partial class MailingViewModel : ViewModelBase
             SelectedRule.ServiceKey = value.Key;
     }
 
-    partial void OnSelectedFrequencyChanged(MailingFrequency value)
+    partial void OnSelectedPeriodChanged(MailingPeriod value)
     {
         if (SelectedRule is not null)
-            SelectedRule.Frequency = value;
+            SelectedRule.Period = value;
     }
 
     private void RefreshRuleContacts()
@@ -234,7 +234,7 @@ public partial class MailingViewModel : ViewModelBase
             {
                 Id = r.Id,
                 ServiceKey = r.ServiceKey,
-                Frequency = r.Frequency,
+                Period = r.Period,
                 Subject = r.Subject,
                 ContactIds = [..r.ContactIds]
             }).ToList()
@@ -265,7 +265,7 @@ public partial class MailingViewModel : ViewModelBase
             {
                 Id = dto.Id,
                 ServiceKey = dto.ServiceKey,
-                Frequency = dto.Frequency,
+                Period = dto.Period,
                 Subject = dto.Subject,
                 ContactIds = [..dto.ContactIds]
             });

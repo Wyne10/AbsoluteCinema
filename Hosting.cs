@@ -56,12 +56,12 @@ public static class Hosting
         {
             return builder.Services
                 // Reports
-                .AddKeyedTransient<WeeklyCardReportService>("weeklyCard")
-                .AddKeyedTransient<WeeklyCashierReportService>("weeklyCashier")
-                .AddKeyedTransient<WeeklyRentalsReportService>("weeklyRentals")
+                .AddKeyedTransient<IReportService, WeeklyCardReportService>("weeklyCard")
+                .AddKeyedTransient<IReportService, WeeklyCashierReportService>("weeklyCashier")
+                .AddKeyedTransient<IReportService, WeeklyRentalsReportService>("weeklyRentals")
                 .AddKeyedTransient<IReportService, WeeklyReportService>("weekly")
-                .AddKeyedTransient<MonthlyPaymentReportService>("monthlyPayment")
-                .AddKeyedTransient<MonthlyGrossReportService>("monthlyGross")
+                .AddKeyedTransient<IReportService, MonthlyPaymentReportService>("monthlyPayment")
+                .AddKeyedTransient<IReportService, MonthlyGrossReportService>("monthlyGross")
                 .AddKeyedTransient<IReportService, MonthlyReportService>("monthly")
                 .AddKeyedTransient<IReportService, QuarterlyReportService>("quarterly")
                 // Schedule

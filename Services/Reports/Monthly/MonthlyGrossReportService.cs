@@ -43,6 +43,7 @@ public class MonthlyGrossReportService(
         var grossMovieData = GrossMovieData.Parse(newFilePath);
         await FillMonthlyReport(grossMovieData, from, to, reportProvider, cancellationToken);
         
+        File.Delete(newFilePath);
         ProgressDownload();
 
         return sessionPath;
@@ -123,13 +124,20 @@ public class MonthlyGrossReportService(
         await reportProvider.DownloadReportToFileAsync(CardReportPath, newFilePath, ReportFormat.EXCELOPENXML, from, to, cancellationToken: cancellationToken);
         
         ProgressDownload();
+
+        var count = 0;
+        using (var workbook = new XLWorkbook(newFilePath))
+        {
+            var worksheet = workbook.Worksheets.First();
         
-        using var workbook = new XLWorkbook(newFilePath);
-        var worksheet = workbook.Worksheets.First();
+            var lastRow = worksheet.LastRowUsed();
+            if (lastRow != null && !lastRow.Cell(4).IsEmpty())
+                count = lastRow.Cell(4).GetValue<int>();
+        }
         
-        var lastRow = worksheet.LastRowUsed();
-        if (lastRow == null || lastRow.Cell(4).IsEmpty())
-            return 0;
-        return lastRow.Cell(4).GetValue<int>();
+        File.Delete(newFilePath);
+        ProgressDownload();
+        
+        return count;
     }
 }

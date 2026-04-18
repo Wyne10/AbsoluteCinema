@@ -21,7 +21,7 @@ public class MailingRuleDto
 {
     public Guid Id { get; set; }
     public string ServiceKey { get; set; } = string.Empty;
-    public MailingFrequency Frequency { get; set; }
+    public MailingPeriod Period { get; set; }
     public string Subject { get; set; } = string.Empty;
     public List<Guid> ContactIds { get; set; } = [];
 }

@@ -27,7 +27,7 @@ public sealed class MailingSender(
             return;
         }
 
-        var dateRanges = CalculateDateRanges(rule.Frequency);
+        var dateRanges = CalculateDateRanges(rule.Period);
         var allFiles = new List<string>();
 
         foreach (var (from, to) in dateRanges)
@@ -62,28 +62,35 @@ public sealed class MailingSender(
         {
             var scheduleService = serviceProvider.GetRequiredService<IScheduleService>();
             using var movieProvider = new CinemaWebMovieProvider(logger);
-            sessionPath = await scheduleService.GenerateScheduleFiles(from, to, movieProvider, cancellationToken);
+            sessionPath = scheduleService.GetSessionPath(from, to);
+            if (Directory.Exists(sessionPath))
+                Directory.EnumerateFiles(sessionPath).ToList().ForEach(File.Delete);
+            await scheduleService.GenerateScheduleFiles(from, to, movieProvider, cancellationToken);
         }
         else
         {
             var reportService = serviceProvider.GetRequiredKeyedService<IReportService>(serviceKey);
             using var reportProvider = new ReportProvider(logger);
-            sessionPath = await reportService.GenerateReportFiles(from, to, reportProvider, cancellationToken);
+            sessionPath = reportService.GetSessionPath(from, to);
+            if (Directory.Exists(sessionPath))
+                Directory.EnumerateFiles(sessionPath).ToList().ForEach(File.Delete);
+            await reportService.GenerateReportFiles(from, to, reportProvider, cancellationToken);
         }
 
         return !Directory.Exists(sessionPath) ? [] : Directory.EnumerateFiles(sessionPath).ToList();
     }
 
-    private static List<(DateTime From, DateTime To)> CalculateDateRanges(MailingFrequency frequency)
+    private static List<(DateTime From, DateTime To)> CalculateDateRanges(MailingPeriod period)
     {
         var today = DateTime.Today;
 
-        return frequency switch
+        return period switch
         {
-            MailingFrequency.Weekly => [GetPreviousWeek(today)],
-            MailingFrequency.Monthly => [GetPreviousMonth(today)],
-            MailingFrequency.Quarterly => [GetPreviousQuarter(today)],
-            MailingFrequency.Semiannual => GetPreviousHalfYear(today),
+            MailingPeriod.LastWeek => [GetPreviousWeek(today)],
+            MailingPeriod.NextWeekend => [GetNextWeekend(today)],
+            MailingPeriod.LastMonth => [GetPreviousMonth(today)],
+            MailingPeriod.LastQuarter => [GetPreviousQuarter(today)],
+            MailingPeriod.Semiannual => GetPreviousHalfYear(today),
             _ => []
         };
     }
@@ -95,6 +102,16 @@ public sealed class MailingSender(
         var prevMonday = thisMonday.AddDays(-7);
         var prevSunday = thisMonday.AddDays(-1);
         return (prevMonday, prevSunday);
+    }
+
+    private static (DateTime From, DateTime To) GetNextWeekend(DateTime today)
+    {
+        var daysUntilFriday = ((int)DayOfWeek.Friday - (int)today.DayOfWeek + 7) % 7;
+        if (daysUntilFriday == 0)
+            daysUntilFriday = 7;
+        var friday = today.AddDays(daysUntilFriday);
+        var sunday = friday.AddDays(2);
+        return (friday, sunday);
     }
 
     private static (DateTime From, DateTime To) GetPreviousMonth(DateTime today)

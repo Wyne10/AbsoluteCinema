@@ -14,7 +14,7 @@ public abstract class ReportService(IOptionsMonitor<DocumentRootConfiguration> r
     public string GetSessionPath(DateTime startDate, DateTime endDate)
     {
         var reportsRootPath = rootConfiguration.Get("ReportRootPath").RootPath;
-        var sessionPath = Path.Combine(reportsRootPath, $"Отчет {startDate:yyyy-MM-dd} - {endDate:yyyy-MM-dd}");
+        var sessionPath = Path.Combine(reportsRootPath, $"Отчет {startDate:dd.MM.yy} - {endDate:dd.MM.yy}");
         return sessionPath;
     }
 

@@ -38,6 +38,7 @@ public class QuarterlyReportService(
         var grossMovieData = GrossMovieData.Parse(newFilePath);
         await FillQuarterlyReport(grossMovieData, from, to, cancellationToken);
 
+        File.Delete(newFilePath);
         ProgressDownload();
         
         return sessionPath;

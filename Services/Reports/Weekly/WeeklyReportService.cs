@@ -6,7 +6,7 @@ namespace AbsoluteCinema.Services.Reports.Weekly;
 
 public sealed class WeeklyReportService(
     IOptionsMonitor<DocumentRootConfiguration> rootConfiguration,
-    [FromKeyedServices("weeklyCard")] WeeklyCardReportService card,
-    [FromKeyedServices("weeklyCashier")] WeeklyCashierReportService cashier,
-    [FromKeyedServices("weeklyRentals")] WeeklyRentalsReportService rentals)
+    [FromKeyedServices("weeklyCard")] IReportService card,
+    [FromKeyedServices("weeklyCashier")] IReportService cashier,
+    [FromKeyedServices("weeklyRentals")] IReportService rentals)
     : CompositeReportService(rootConfiguration, [card, cashier, rentals]);
