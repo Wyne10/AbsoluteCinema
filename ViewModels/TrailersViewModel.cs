@@ -90,7 +90,7 @@ public partial class TrailersViewModel : ViewModelBase
 
                 if (videoFiles.Count == 0) continue;
 
-                var movie = new TrailerMovie(cwMovie.Name, release.CoverMedium ?? release.Cover, videoFiles);
+                var movie = new TrailerMovie(cwMovie.Name, release.CoverMedium ?? release.Cover, videoFiles, release.ShortDescription?.Text);
                 movie.PropertyChanged += (_, _) => RenderTrailersCommand.NotifyCanExecuteChanged();
                 Movies.Add(movie);
             }

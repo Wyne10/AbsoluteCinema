@@ -6,6 +6,7 @@ using AbsoluteCinema.Services.Reports.Monthly;
 using AbsoluteCinema.Services.Reports.Quarterly;
 using AbsoluteCinema.Services.Reports.Weekly;
 using AbsoluteCinema.Services.Schedule;
+using AbsoluteCinema.Services.Vk;
 using AbsoluteCinema.ViewModels;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -38,7 +39,8 @@ public static class Hosting
                 .Configure<DocumentTemplateConfiguration>("QuarterlyReport", builder.Configuration.GetSection("Report:Quarterly"))
                 .Configure<DocumentTemplateConfiguration>("Repertoire", builder.Configuration.GetSection("Schedule:Repertoire"))
                 .Configure<TrailerConfiguration>(builder.Configuration.GetSection("Trailer"))
-                .Configure<SmtpConfiguration>(builder.Configuration.GetSection("Mailing:Smtp"));
+                .Configure<SmtpConfiguration>(builder.Configuration.GetSection("Mailing:Smtp"))
+                .Configure<VkConfiguration>(builder.Configuration.GetSection("Vk"));
         }
         
         public ILoggingBuilder ConfigureLogger()
@@ -72,12 +74,15 @@ public static class Hosting
                 .AddSingleton<MailingStorage>()
                 .AddSingleton<IEmailService, SmtpEmailService>()
                 .AddSingleton<MailingSender>()
+                // VK
+                .AddSingleton<VkService>()
                 // View models
                 .AddTransient<MainWindowViewModel>()
                 .AddSingleton<ReportsViewModel>()
                 .AddSingleton<ScheduleViewModel>()
                 .AddSingleton<TrailersViewModel>()
                 .AddSingleton<MailingViewModel>()
+                .AddSingleton<VkAnnouncementsViewModel>()
                 .AddTransient<SettingsViewModel>()
                 // Singletons
                 .AddSingleton<IMovieProvider<Dtos.Movie>, PoiskinoMovieProvider>()

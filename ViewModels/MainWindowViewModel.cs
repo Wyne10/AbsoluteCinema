@@ -9,9 +9,10 @@ public partial class MainWindowViewModel(
     ScheduleViewModel scheduleViewModel,
     TrailersViewModel trailersViewModel,
     MailingViewModel mailingViewModel,
+    VkAnnouncementsViewModel vkAnnouncementsViewModel,
     IServiceProvider serviceProvider) : ViewModelBase
 {
-    private readonly ViewModelBase[] _pages = [reportsViewModel, scheduleViewModel, trailersViewModel, mailingViewModel];
+    private readonly ViewModelBase[] _pages = [reportsViewModel, scheduleViewModel, trailersViewModel, mailingViewModel, vkAnnouncementsViewModel];
 
     [ObservableProperty]
     private ViewModelBase _currentPage = reportsViewModel;
@@ -21,7 +22,7 @@ public partial class MainWindowViewModel(
 
     partial void OnSelectedNavIndexChanged(int value)
     {
-        if (value == 4)
+        if (value == 5)
         {
             var settings = serviceProvider.GetRequiredService<SettingsViewModel>();
             settings.Load();

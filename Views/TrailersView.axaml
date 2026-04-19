@@ -129,6 +129,12 @@
                                                FontSize="14"
                                                FontWeight="SemiBold"
                                                TextWrapping="Wrap"/>
+                                    <TextBlock Text="{Binding ShortDescription}"
+                                               FontSize="12"
+                                               Opacity="0.7"
+                                               TextWrapping="Wrap"
+                                               MaxLines="3"
+                                               IsVisible="{Binding ShortDescription, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
                                     <ComboBox ItemsSource="{Binding VideoFiles}"
                                               SelectedItem="{Binding SelectedVideoFile}"
                                               PlaceholderText="Выберите файл"

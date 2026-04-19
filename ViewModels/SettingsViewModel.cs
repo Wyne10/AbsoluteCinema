@@ -34,6 +34,8 @@ public partial class SettingsViewModel(ILogger<SettingsViewModel> logger) : View
         ["Mailing:Smtp:FromAddress"] = "Email отправителя",
         ["Mailing:Smtp:FromName"] = "Имя отправителя",
         ["Mailing:Smtp:UseSsl"] = "Использовать SSL",
+        ["Vk:AccessToken"] = "VK токен доступа",
+        ["Vk:GroupId"] = "VK ID группы",
     };
 
     private static readonly Dictionary<string, string> GroupNames = new()
@@ -43,6 +45,7 @@ public partial class SettingsViewModel(ILogger<SettingsViewModel> logger) : View
         ["Trailer"] = "Трейлеры",
         ["Schedule"] = "Расписание",
         ["Mailing"] = "Рассылка",
+        ["Vk"] = "VK",
     };
 
     public ObservableCollection<SettingField> Settings { get; } = [];

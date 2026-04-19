@@ -11,7 +11,7 @@ using Microsoft.Extensions.Logging;
 
 namespace AbsoluteCinema.Services.Trailers;
 
-public sealed class TrailerService(string rootPath, string ffmpegPath, ILogger logger) : ITrailerService, IDisposable
+public sealed class TrailerService(string rootPath, string ffmpegPath, ILogger logger) : IDisposable
 {
     private readonly HttpClient _httpClient = new();
 
@@ -63,6 +63,13 @@ public sealed class TrailerService(string rootPath, string ffmpegPath, ILogger l
         await ConcatenateVideos(localPaths, outputPath, cancellationToken);
 
         return outputPath;
+    }
+
+    public async Task<string?> DownloadFileAsync(KinoplanFile file, CancellationToken cancellationToken = default)
+    {
+        var downloadDir = Path.Combine(Path.GetTempPath(), "AbsoluteCinema");
+        Directory.CreateDirectory(downloadDir);
+        return await DownloadFile(file, downloadDir, _ => { }, cancellationToken);
     }
 
     private async Task<string?> DownloadFile(
