@@ -35,25 +35,8 @@
                                FontWeight="SemiBold"
                                Margin="0,0,0,12"/>
 
-                    <!-- Contact list -->
-                    <DataGrid DockPanel.Dock="Top"
-                              ItemsSource="{Binding Contacts}"
-                              SelectedItem="{Binding SelectedContact}"
-                              AutoGenerateColumns="False"
-                              CanUserReorderColumns="False"
-                              CanUserSortColumns="False"
-                              IsReadOnly="True"
-                              SelectionMode="Single"
-                              Height="200"
-                              Margin="0,0,0,12">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="Имя" Binding="{Binding Name}" Width="*"/>
-                            <DataGridTextColumn Header="Email" Binding="{Binding Email}" Width="*"/>
-                        </DataGrid.Columns>
-                    </DataGrid>
-
                     <!-- Add contact form -->
-                    <StackPanel DockPanel.Dock="Bottom" Spacing="8">
+                    <StackPanel DockPanel.Dock="Bottom" Spacing="8" Margin="0,12,0,0">
                         <TextBox Text="{Binding NewContactName}"
                                  Watermark="Имя"/>
                         <TextBox Text="{Binding NewContactEmail}"
@@ -67,6 +50,20 @@
                                     Padding="16,8"/>
                         </StackPanel>
                     </StackPanel>
+
+                    <!-- Contact list (fills remaining space) -->
+                    <DataGrid ItemsSource="{Binding Contacts}"
+                              SelectedItem="{Binding SelectedContact}"
+                              AutoGenerateColumns="False"
+                              CanUserReorderColumns="False"
+                              CanUserSortColumns="False"
+                              IsReadOnly="True"
+                              SelectionMode="Single">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Имя" Binding="{Binding Name}" Width="*"/>
+                            <DataGridTextColumn Header="Email" Binding="{Binding Email}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
                 </DockPanel>
             </Border>
 
@@ -84,25 +81,10 @@
                                FontWeight="SemiBold"
                                Margin="0,0,0,12"/>
 
-                    <!-- Rule list -->
-                    <DataGrid DockPanel.Dock="Top"
-                              ItemsSource="{Binding Rules}"
-                              SelectedItem="{Binding SelectedRule}"
-                              AutoGenerateColumns="False"
-                              CanUserReorderColumns="False"
-                              CanUserSortColumns="False"
-                              IsReadOnly="True"
-                              SelectionMode="Single"
-                              Height="140"
-                              Margin="0,0,0,12">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="Сервис" Binding="{Binding ServiceKey}" Width="*"/>
-                            <DataGridTextColumn Header="Период" Binding="{Binding Period}" Width="*"/>
-                        </DataGrid.Columns>
-                    </DataGrid>
-
                     <!-- Rule editor -->
-                    <ScrollViewer DockPanel.Dock="Top">
+                    <ScrollViewer DockPanel.Dock="Bottom"
+                                  Margin="0,12,0,0"
+                                  MaxHeight="350">
                         <StackPanel Spacing="8"
                                     IsVisible="{Binding SelectedRule, Converter={x:Static ObjectConverters.IsNotNull}}">
                             <TextBlock Text="Тип:" FontWeight="SemiBold" Margin="0,4,0,0"/>
@@ -158,12 +140,27 @@
                     </ScrollViewer>
 
                     <!-- Add rule when none selected -->
-                    <StackPanel IsVisible="{Binding SelectedRule, Converter={x:Static ObjectConverters.IsNull}}"
-                                Margin="0,8,0,0">
+                    <StackPanel DockPanel.Dock="Bottom"
+                                IsVisible="{Binding SelectedRule, Converter={x:Static ObjectConverters.IsNull}}"
+                                Margin="0,12,0,0">
                         <Button Command="{Binding AddRuleCommand}"
                                 Content="Добавить правило"
                                 Padding="16,8"/>
                     </StackPanel>
+
+                    <!-- Rule list (fills remaining space) -->
+                    <DataGrid ItemsSource="{Binding Rules}"
+                              SelectedItem="{Binding SelectedRule}"
+                              AutoGenerateColumns="False"
+                              CanUserReorderColumns="False"
+                              CanUserSortColumns="False"
+                              IsReadOnly="True"
+                              SelectionMode="Single">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Сервис" Binding="{Binding ServiceKey}" Width="*"/>
+                            <DataGridTextColumn Header="Период" Binding="{Binding Period}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
                 </DockPanel>
             </Border>
         </Grid>
