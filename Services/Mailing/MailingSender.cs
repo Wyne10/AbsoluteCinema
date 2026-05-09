@@ -47,11 +47,8 @@ public sealed class MailingSender(
             : rule.Subject.Replace("{date}", FormatDatePlaceholder(rule.Period, dateRanges));
         var body = "Автоматизированная рассылка - АИС \"ДК Ровесник\"";
 
-        foreach (var contact in recipients)
-        {
-            logger.LogInformation("Sending {Count} files to {Email}", allFiles.Count, contact.Email);
-            await emailService.SendAsync(contact.Email, subject, body, allFiles, cancellationToken);
-        }
+        logger.LogInformation("Sending {Count} files to {Recipients} recipients", allFiles.Count, recipients.Count);
+        await emailService.SendAsync(recipients.Select(r => r.Email), subject, body, allFiles, cancellationToken);
     }
 
     private async Task<List<string>> GenerateFilesAsync(string serviceKey, DateTime from, DateTime to, CancellationToken cancellationToken)

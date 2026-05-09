@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using AbsoluteCinema.Configuration;
@@ -11,12 +12,12 @@ namespace AbsoluteCinema.Services.Mailing;
 
 public sealed class SmtpEmailService(IOptionsMonitor<SmtpConfiguration> configuration, ILogger<SmtpEmailService> logger) : IEmailService
 {
-    public async Task SendAsync(string to, string subject, string body, IEnumerable<string> attachmentPaths, CancellationToken cancellationToken = default)
+    public async Task SendAsync(IEnumerable<string> recipients, string subject, string body, IEnumerable<string> attachmentPaths, CancellationToken cancellationToken = default)
     {
         var smtp = configuration.CurrentValue;
         var message = new MimeMessage();
         message.From.Add(new MailboxAddress(smtp.FromName, smtp.FromAddress));
-        message.To.Add(MailboxAddress.Parse(to));
+        message.To.AddRange(recipients.Select(MailboxAddress.Parse));
         message.Subject = subject;
 
         var builder = new BodyBuilder { TextBody = body };
@@ -35,6 +36,6 @@ public sealed class SmtpEmailService(IOptionsMonitor<SmtpConfiguration> configur
         await client.SendAsync(message, cancellationToken);
         await client.DisconnectAsync(true, cancellationToken);
 
-        logger.LogInformation("Email sent to {To} with subject '{Subject}'", to, subject);
+        logger.LogInformation("Email sent to {Count} recipients with subject '{Subject}'", message.To.Count, subject);
     }
 }

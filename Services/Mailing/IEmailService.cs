@@ -6,5 +6,5 @@ namespace AbsoluteCinema.Services.Mailing;
 
 public interface IEmailService
 {
-    Task SendAsync(string to, string subject, string body, IEnumerable<string> attachmentPaths, CancellationToken cancellationToken = default);
+    Task SendAsync(IEnumerable<string> recipients, string subject, string body, IEnumerable<string> attachmentPaths, CancellationToken cancellationToken = default);
 }
