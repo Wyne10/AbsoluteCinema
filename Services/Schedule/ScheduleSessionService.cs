@@ -106,7 +106,6 @@ public class ScheduleSessionService(
             worksheet.Cell(row, "A").Value = $"{dateLabel} ({dayOfWeek})";
             worksheet.Range(row, 1, row, 5).Merge();
             var dateStyle = worksheet.Cell(row, "A").Style;
-            dateStyle.Border.SetOutsideBorder(XLBorderStyleValues.Thin);
             dateStyle.Font.Bold = true;
             dateStyle.Font.FontSize = 15;
             dateStyle.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
