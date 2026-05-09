@@ -15,7 +15,7 @@ public abstract partial class CinemaWebAccessor : IDisposable
     private string BaseUrl { get; }
     protected bool IsAuthenticated { get; set; }
     
-    protected CinemaWebAccessor(string baseUrl = "http://10.72.58.93")
+    protected CinemaWebAccessor(string baseUrl = "http://192.168.0.254")
     {
         BaseUrl = baseUrl.TrimEnd('/');
         var handler = new HttpClientHandler

@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging;
 
 namespace AbsoluteCinema.Services.Movies;
 
-public partial class CinemaWebMovieProvider(ILogger logger, string baseUrl = "http://10.72.58.93") : CinemaWebAccessor(baseUrl)
+public partial class CinemaWebMovieProvider(ILogger logger, string baseUrl = "http://192.168.0.254") : CinemaWebAccessor(baseUrl)
 {
     public async Task<Dictionary<string, CinemaWebMovie>> GetMoviesAsync(IEnumerable<string> movieNames, CancellationToken cancellationToken = default)
     {
