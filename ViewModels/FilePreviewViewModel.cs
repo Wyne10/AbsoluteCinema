@@ -1,7 +1,10 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Threading.Tasks;
+using System.IO;
 using AbsoluteCinema.Models;
 using Avalonia;
+using Avalonia.Platform.Storage;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -54,23 +57,25 @@ public abstract partial class FilePreviewViewModel : ViewModelBase
         PreviewFilePath = value.Path;
     }
 
-    public void OpenReport(Visual visual)
+    public async Task OpenFile(Visual visual)
     {
         if (SelectedFile == null) return;
-        TopLevel.GetTopLevel(visual)?.Launcher.LaunchUriAsync(new Uri(SelectedFile.Path));
+        var topLevel = TopLevel.GetTopLevel(visual);
+        if (topLevel is null) return;
+        await topLevel.Launcher.LaunchFileInfoAsync(new FileInfo(SelectedFile.Path));
     }
 
     [RelayCommand]
-    private void OpenFilesFolder()
+    private async Task OpenFilesFolder()
     {
         var path = GetFilesFolderPath();
         if (path is null) return;
 
-        if (System.IO.Directory.Exists(path) == false)
-            System.IO.Directory.CreateDirectory(path);
+        if (Directory.Exists(path) == false)
+            Directory.CreateDirectory(path);
 
         if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime { MainWindow: not null } desktop)
-            desktop.MainWindow.Launcher.LaunchUriAsync(new Uri(path));
+            await desktop.MainWindow.Launcher.LaunchDirectoryInfoAsync(new DirectoryInfo(path));
     }
 
     protected abstract string? GetFilesFolderPath();

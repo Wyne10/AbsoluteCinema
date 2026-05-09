@@ -11,6 +11,7 @@ using AbsoluteCinema.Services.Trailers;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Hosting;
@@ -177,7 +178,7 @@ public partial class TrailersViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private void OpenTrailersFolder()
+    private async Task OpenTrailersFolder()
     {
         var path = Configuration.RootPath;
         if (string.IsNullOrWhiteSpace(path)) return;
@@ -186,15 +187,17 @@ public partial class TrailersViewModel : ViewModelBase
             Directory.CreateDirectory(path);
 
         if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime { MainWindow: not null } desktop)
-            desktop.MainWindow.Launcher.LaunchUriAsync(new Uri(path));
+            await desktop.MainWindow.Launcher.LaunchDirectoryInfoAsync(new DirectoryInfo(path));
     }
 
     [ObservableProperty]
     private RenderedTrailer? _selectedRenderedTrailer;
 
-    public void OpenSelectedTrailer(Visual visual)
+    public async Task OpenSelectedTrailer(Visual visual)
     {
         if (SelectedRenderedTrailer is null) return;
-        TopLevel.GetTopLevel(visual)?.Launcher.LaunchUriAsync(new Uri(SelectedRenderedTrailer.FullPath));
+        var topLevel = TopLevel.GetTopLevel(visual);
+        if (topLevel is null) return;
+        await topLevel.Launcher.LaunchFileInfoAsync(new FileInfo(SelectedRenderedTrailer.FullPath));
     }
 }

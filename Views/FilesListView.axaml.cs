@@ -9,10 +9,10 @@ public partial class FilesListView : UserControl
     {
         InitializeComponent();
 
-        FilesListBox.DoubleTapped += (_, _) =>
+        FilesListBox.DoubleTapped += async (_, _) =>
         {
             if (DataContext is FilePreviewViewModel vm)
-                vm.OpenReport(this);
+                await vm.OpenFile(this);
         };
     }
 }
