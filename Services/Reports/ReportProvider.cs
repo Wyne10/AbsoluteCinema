@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging;
 
 namespace AbsoluteCinema.Services.Reports;
 
-public partial class ReportProvider(ILogger logger, string baseUrl = "http://192.168.3.150") : CinemaWebAccessor(baseUrl)
+public partial class ReportProvider(ILogger logger, string baseUrl = "http://10.72.58.93") : CinemaWebAccessor(baseUrl)
 {
     private async Task<byte[]> DownloadReportAsync(string reportPath, ReportFormat format, DateTime? startDate = null, DateTime? endDate = null, Dictionary<string, string>? fields = null, CancellationToken cancellationToken = default)
     {

@@ -12,9 +12,9 @@ public partial class TrailersView : UserControl
         RenderedTrailersListBox.DoubleTapped += OnRenderedTrailerDoubleTapped;
     }
 
-    private void OnRenderedTrailerDoubleTapped(object? sender, TappedEventArgs e)
+    private async void OnRenderedTrailerDoubleTapped(object? sender, TappedEventArgs e)
     {
         if (DataContext is TrailersViewModel vm)
-            vm.OpenSelectedTrailer(this);
+            await vm.OpenSelectedTrailer(this);
     }
 }

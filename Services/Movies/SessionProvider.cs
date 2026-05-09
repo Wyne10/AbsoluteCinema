@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging;
 
 namespace AbsoluteCinema.Services.Movies;
 
-public partial class SessionProvider(ILogger logger, string baseUrl = "http://192.168.3.150") : CinemaWebAccessor(baseUrl)
+public partial class SessionProvider(ILogger logger, string baseUrl = "http://10.72.58.93") : CinemaWebAccessor(baseUrl)
 {
     public async Task<List<CinemaWebSession>> GetSessionsAsync(DateOnly date, CancellationToken cancellationToken = default)
     {

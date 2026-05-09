@@ -15,7 +15,7 @@ sealed class Program
     // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
     // yet and stuff might break.
     [STAThread]
-    public static async Task Main(string[] args) {
+    public static void Main(string[] args) {
         var builder = Host.CreateApplicationBuilder(args);
 
         builder.SetupConfiguration(args);
@@ -24,9 +24,9 @@ sealed class Program
         builder.AddServices();
 
         var host = builder.Build();
-        App.Host = host;   
-
-        await host.StartAsync();
+        App.Host = host;
+        
+        host.Start();
 
         try
         {
@@ -56,7 +56,7 @@ sealed class Program
         }
         finally
         {
-            await host.StopAsync();
+            host.StopAsync().GetAwaiter().GetResult();
             host.Dispose();
         } 
     }
