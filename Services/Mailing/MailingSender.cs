@@ -44,7 +44,7 @@ public sealed class MailingSender(
 
         var subject = string.IsNullOrWhiteSpace(rule.Subject)
             ? ""
-            : rule.Subject;
+            : rule.Subject.Replace("{date}", FormatDatePlaceholder(rule.Period, dateRanges));
         var body = "Автоматизированная рассылка - АИС \"ДК Ровесник\"";
 
         foreach (var contact in recipients)
@@ -78,6 +78,25 @@ public sealed class MailingSender(
         }
 
         return !Directory.Exists(sessionPath) ? [] : Directory.EnumerateFiles(sessionPath).ToList();
+    }
+
+    private static string FormatDatePlaceholder(MailingPeriod period, List<(DateTime From, DateTime To)> ranges)
+    {
+        if (ranges.Count == 0) return "";
+
+        var (from, to) = ranges[0];
+        return period switch
+        {
+            MailingPeriod.LastWeek or MailingPeriod.NextWeekend =>
+                $"{from:dd.MM.yy} - {to:dd.MM.yy}",
+            MailingPeriod.LastMonth =>
+                $"{from:MMMM yyyy}",
+            MailingPeriod.LastQuarter =>
+                $"{(from.Month - 1) / 3 + 1} квартал {from.Year}",
+            MailingPeriod.Semiannual =>
+                string.Join(", ", ranges.Select(r => $"{(r.From.Month - 1) / 3 + 1} квартал {r.From.Year}")),
+            _ => ""
+        };
     }
 
     private static List<(DateTime From, DateTime To)> CalculateDateRanges(MailingPeriod period)
