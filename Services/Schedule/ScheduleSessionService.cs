@@ -58,11 +58,11 @@ public class ScheduleSessionService(
         using var workbook = new XLWorkbook();
         var worksheet = workbook.AddWorksheet("ScheduleWithPrices");
 
-        worksheet.Column("A").Width = 11.25;
-        worksheet.Column("B").Width = 35.75;
-        worksheet.Column("C").Width = 9.25;
-        worksheet.Column("D").Width = 19.12;
-        worksheet.Column("E").Width = 15.26;
+        worksheet.Column("A").Width = 11.29;
+        worksheet.Column("B").Width = 32.57;
+        worksheet.Column("C").Width = 9.29;
+        worksheet.Column("D").Width = 16.43;
+        worksheet.Column("E").Width = 12.14;
 
         var row = 1;
 
@@ -70,7 +70,7 @@ public class ScheduleSessionService(
         var fromStr = from.ToString("d MMMM");
         var toStr = to.ToString("d MMMM yyyy");
         worksheet.Cell(row, "A").Value = $"Расписание с {fromStr} по {toStr}";
-        worksheet.Range(row, 1, row, 4).Merge();
+        worksheet.Range(row, 1, row, 5).Merge();
         worksheet.Row(row).Height = 50;
         var titleStyle = worksheet.Cell(row, "A").Style;
         titleStyle.Font.Bold = true;
@@ -161,17 +161,17 @@ public class ScheduleSessionService(
 
         // Footer: contact info
         worksheet.Cell(row, "A").Value = "ТЮЗ ул. Курчатова 25а. телефон: (8-343-77) 7-32-66; 7-22-36";
-        worksheet.Range(row, 1, row, 5).Merge();
+        worksheet.Range(row, 1, row, 4).Merge();
         var contactStyle = worksheet.Cell(row, "A").Style;
         contactStyle.Font.Bold = true;
-        contactStyle.Font.FontSize = 16;
+        contactStyle.Font.FontSize = 14;
         contactStyle.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
         row++;
 
         // Footer: link text and images
         var footerRow = row;
         worksheet.Cell(row, "A").Value = "ССЫЛКА НА ПОКУПКУ БИЛЕТОВ ОНЛАЙН https://premierzal.ru/theatre/rovesnik/schedule            СМОТРИ ПО ПУШКИНСКОЙ КАРТЕ В КИНО           ";
-        worksheet.Range(row, 1, row, 2).Merge();
+        worksheet.Range(row, 1, row + 2, 2).Merge();
         var linkStyle = worksheet.Cell(row, "A").Style;
         linkStyle.Font.Bold = true;
         linkStyle.Font.FontSize = 11;
@@ -185,10 +185,10 @@ public class ScheduleSessionService(
         var pushkinLogoPath = Path.Combine(templateDir, "image2.png");
 
         if (File.Exists(qrPath))
-            worksheet.AddPicture(qrPath).MoveTo(worksheet.Cell(footerRow, "C")).WithSize(130, 130);
+            worksheet.AddPicture(qrPath).MoveTo(worksheet.Cell(footerRow, "C")).WithSize(100, 100);
 
         if (File.Exists(pushkinLogoPath))
-            worksheet.AddPicture(pushkinLogoPath).MoveTo(worksheet.Cell(footerRow, "E"), -40, 0).WithSize(160, 140);
+            worksheet.AddPicture(pushkinLogoPath).MoveTo(worksheet.Cell(footerRow, "E"), -40, 0).WithSize(120, 100);
 
         var fileName = $"Расписание {from:dd MMMM} - {to:dd MMMM}.xlsx";
         var filePath = Path.Combine(sessionPath, fileName);
